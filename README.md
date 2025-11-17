@@ -17,11 +17,7 @@ CVAS_BEYOND_DATA/
 ├── Scripts/                        # Python processing scripts
 │   ├── 01_convert_historical.py   # Initial historical data conversion
 │   ├── 02_process_daily.py        # Daily incremental processing
-│   ├── 03_validate_data.py        # Data quality validation
-│   ├── 04_test_queries.py         # Query testing utilities
-│   ├── 05_build_subscription_view.py  # Subscription aggregation
-│   ├── check_Counts.py            # Data count verification
-│   └── test_install.py            # Environment testing
+│   ├── 03_build_subscription_view.py  # Subscription aggregation
 │
 ├── Daily_Data/                     # Daily CSV transaction files (git-ignored)
 ├── Historical_Data/                # Historical CSV data (git-ignored)
