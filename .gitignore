@@ -1,0 +1,60 @@
+# Data Files - Exclude all data files but keep folder structure
+Daily_Data/*.csv
+Historical_Data/*.csv
+Parquet_Data/**/*
+!Parquet_Data/.gitkeep
+
+# User Base Data
+User_Base/NBS_BASE/*
+!User_Base/NBS_BASE/.gitkeep
+User_Base/user_base_by_category.csv
+User_Base/user_base_by_service.csv
+
+# Logs
+Logs/*.log
+Logs/*.stderr
+Logs/*.stdout
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.bak
+*.backup

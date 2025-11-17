@@ -1,0 +1,451 @@
+
+================================================================================
+SUBSCRIPTION BILLING DATA MIGRATION PROJECT - COMPLETE SUMMARY
+================================================================================
+Date: November 11, 2025
+Project: Historical CSV to Parquet Migration using Polars & DuckDB
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+OBJECTIVE:
+Migrate historical subscription billing data from CSV files to Parquet format
+for improved performance and efficient daily processing.
+
+DATA STRUCTURE:
+- Historical Data: Located in "Historical_Data/" directory
+- Daily Data: Located in "Daily_Data/" directory
+- Data up to: November 10, 2025
+
+TRANSACTION TYPES:
+1. ACT (Activations) - act_atlas.csv
+2. RENO (Renewals) - reno_atlas.csv
+3. DCT (Deactivations) - dct_atlas.csv
+4. CNR (Cancellations) - cnr_atlas.csv
+5. RFND (Refunds) - rfnd_atlas.csv
+
+================================================================================
+2. DIRECTORY STRUCTURE
+================================================================================
+
+Project Root/
+├── Historical_Data/
+│   ├── act_atlas.csv
+│   ├── reno_atlas.csv
+│   ├── dct_atlas.csv
+│   ├── cnr_atlas.csv
+│   └── rfnd_atlas.csv
+├── Daily_Data/
+│   ├── act_atlas_YYYY-MM-DD.csv
+│   ├── reno_atlas_YYYY-MM-DD.csv
+│   └── ... (daily files)
+├── Parquet_Data/
+│   ├── transactions/
+│   │   ├── act/year_month=YYYY-MM/*.parquet
+│   │   ├── reno/year_month=YYYY-MM/*.parquet
+│   │   ├── dct/year_month=YYYY-MM/*.parquet
+│   │   ├── cnr/year_month=YYYY-MM/*.parquet
+│   │   └── rfnd/year_month=YYYY-MM/*.parquet
+│   └── aggregated/
+│       └── subscriptions.parquet
+└── Scripts/
+    ├── 01_convert_historical.py
+    ├── 02_process_daily.py
+    ├── 03_validate_data.py
+    ├── 04_test_queries.py
+    └── 05_build_subscription_view.py
+
+================================================================================
+3. DATA SCHEMAS
+================================================================================
+
+ACT (Activations):
+- subscription_id, tmuserid, msisdn, cpc, trans_type_id, channel_act
+- trans_date, act_date, reno_date, camp_name, channel, camp_type
+- camp_type_name, partner_id, rev, year_month (partition)
+
+RENO (Renewals):
+- subscription_id, tmuserid, msisdn, cpc, trans_type_id, channel_act
+- trans_date, act_date, reno_date, camp_name, channel, camp_type
+- camp_type_name, partner_id, rev, year_month (partition)
+
+DCT (Deactivations):
+- subscription_id, tmuserid, msisdn, cpc, channel_dct, trans_date
+- act_date, reno_date, camp_name, channel, camp_type, camp_type_name
+- partner_id, year_month (partition)
+
+CNR (Cancellations):
+- sbn_id, tmuserid, msisdn, cpc, mode, cancel_date, act_date
+- reno_date, camp_name, channel, camp_type, camp_type_name
+- partner_id, year_month (partition)
+
+RFND (Refunds):
+- sbnid, tmuserid, msisdn, cpc, refnd_date, act_date, reno_date
+- camp_name, channel, camp_type, camp_type_name, partner_id
+- rfnd_amount, year_month (partition)
+
+================================================================================
+4. SPECIAL BUSINESS CASES HANDLED
+================================================================================
+
+CASE 1: UPGRADE WITH CPC CHANGE
+Example: subscription_id 343924254655360000
+- User activated with Free CPC 45531 (ORGANIC)
+- Upgraded to Charged CPC 45530 (UPGRADE)
+- Extra DCT line created on upgrade date with channel_dct='UPGRADE'
+- Solution: Track all CPCs in chronological list [45531, 45530]
+- Exclude UPGRADE DCT records from final deactivation
+
+Transaction Flow:
+1. ACT: CPC 45531 (Free) - 2025-02-19
+2. ACT: CPC 45530 (Upgrade) - 2025-05-20
+3. DCT: CPC 45530, channel='UPGRADE' - 2025-05-20 (IGNORED)
+4. RENO: CPC 45530 (multiple renewals)
+5. DCT: CPC 45530, channel='CCC-CR' - 2025-10-17 (FINAL DEACTIVATION)
+
+CASE 2: NORMAL SUBSCRIPTION (NO UPGRADE)
+Example: subscription_id with CPC 44009
+- Single CPC throughout lifecycle
+- ACT → Multiple RENO → DCT
+- CPC list: [44009]
+
+CASE 3: MISSING ACTIVATION RECORD
+Example: subscription_id 8340611317041800000
+- No ACT record in act_atlas.csv
+- 60 RENO records exist with act_date field populated
+- Solution: Use act_date from first RENO record
+- Flag with missing_act_record = TRUE
+- Infer activation details from first transaction
+
+================================================================================
+5. MIGRATION SCRIPTS
+================================================================================
+
+SCRIPT 1: 01_convert_historical.py
+Purpose: One-time conversion of historical CSV to Parquet
+Features:
+- Reads all historical CSV files
+- Adds year_month partition column
+- Writes to Parquet with Hive partitioning
+- Uses PyArrow write_to_dataset() for partitioned writes
+- Compression: SNAPPY
+
+Key Code Pattern:
+```python
+import polars as pl
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+df = pl.read_csv('Historical_Data/act_atlas.csv')
+df = df.with_columns(
+    pl.col('trans_date').str.strptime(pl.Datetime, '%Y-%m-%d %H:%M:%S')
+        .dt.strftime('%Y-%m').alias('year_month')
+)
+table = df.to_arrow()
+pq.write_to_dataset(
+    table,
+    root_path='Parquet_Data/transactions/act',
+    partition_cols=['year_month']
+)
+```
+
+SCRIPT 2: 02_process_daily.py
+Purpose: Daily incremental updates
+Features:
+- Scans Daily_Data/ for new CSV files
+- Reads existing Parquet data
+- Concatenates new data
+- Rewrites partitions with new data
+- Handles all transaction types
+
+Daily File Naming Convention:
+- act_atlas_2025-11-11.csv
+- reno_atlas_2025-11-11.csv
+- dct_atlas_2025-11-11.csv
+- cnr_atlas_2025-11-11.csv
+- rfnd_atlas_2025-11-11.csv
+
+SCRIPT 3: 03_validate_data.py
+Purpose: Data quality validation
+Checks:
+- Row counts per transaction type
+- Schema validation
+- Duplicate detection
+- Date range verification
+- Partition integrity
+
+SCRIPT 4: 04_test_queries.py
+Purpose: Performance testing with DuckDB
+Tests:
+- Query speed on Parquet vs CSV
+- Aggregation performance
+- Filter performance
+- Join performance
+
+SCRIPT 5: 05_build_subscription_view.py
+Purpose: Create aggregated subscription view
+Features:
+- Combines all transaction types
+- Handles upgrades (multiple CPCs)
+- Handles missing activations
+- Calculates lifetime metrics
+- Tracks revenue across all events
+
+Output Schema:
+- subscription_id, tmuserid, msisdn
+- cpc_list (e.g., [45531, 45530])
+- cpc_count, first_cpc, current_cpc
+- has_upgraded, upgrade_date, upgraded_to_cpc
+- activation_date, activation_trans_date, missing_act_record
+- activation_campaign, activation_channel, activation_revenue
+- renewal_count, renewal_revenue, last_renewal_date
+- deactivation_date, deactivation_mode
+- cancellation_date, cancellation_mode
+- refund_count, total_refunded
+- total_revenue, total_revenue_with_upgrade
+- subscription_status (Active/Deactivated/Cancelled)
+- lifetime_days, end_date
+
+================================================================================
+6. CURRENT DATA STATISTICS (as of Nov 10, 2025)
+================================================================================
+
+TOTAL SUBSCRIPTIONS: 1,085,229
+
+STATUS DISTRIBUTION:
+- Deactivated: 587,466 (54.13%)
+- Active: 298,931 (27.55%)
+- Cancelled: 198,832 (18.32%)
+
+SPECIAL CASES:
+- Missing Activation Records: 412,105 (37.97%)
+- Subscriptions with Upgrades: 81,951 (7.55%)
+- Single CPC Subscriptions: 1,003,278 (92.45%)
+
+REVENUE METRICS:
+- Total Revenue: €72,950,856.37
+- Average Revenue per Subscription: €67.22
+- Average Renewals per Subscription: 26.16
+- Average Lifetime: 472.9 days
+
+TOP CAMPAIGNS BY REVENUE:
+1. 53e0c03: €5,702,208.40 (67,421 subs)
+2. c342de8: €3,323,036.88 (50,672 subs)
+3. normal: €1,756,726.50 (19,601 subs)
+4. 5de65c1: €1,343,303.00 (25,777 subs)
+5. destacado: €1,222,534.65 (17,666 subs)
+
+RECENT MONTHLY ACTIVATIONS:
+- 2025-11: 4,591 new subs, €14,793.82, 276 upgrades
+- 2025-10: 14,290 new subs, €48,674.71, 2,796 upgrades
+- 2025-09: 14,437 new subs, €47,938.92, 2,961 upgrades
+
+================================================================================
+7. DAILY UPDATE WORKFLOW
+================================================================================
+
+STEP 1: Process Daily Data
+Command: python Scripts/02_process_daily.py
+- Reads new CSV files from Daily_Data/
+- Appends to existing Parquet files
+- Updates partitions
+
+STEP 2: Rebuild Subscription View
+Command: python Scripts/05_build_subscription_view.py
+- Recreates aggregated view with all data
+- Handles all special cases
+- Exports fresh subscriptions.parquet
+
+AUTOMATION SCRIPT (daily_update.sh):
+```bash
+#!/bin/bash
+echo "Daily Data Update - $(date)"
+python Scripts/02_process_daily.py
+if [ $? -eq 0 ]; then
+    python Scripts/05_build_subscription_view.py
+    echo "Update completed at $(date)"
+fi
+```
+
+CRON SCHEDULE (8 AM daily):
+0 8 * * * cd /path/to/project && ./Scripts/daily_update.sh >> logs/daily_update.log 2>&1
+
+================================================================================
+8. QUERY EXAMPLES
+================================================================================
+
+EXAMPLE 1: Find subscriptions with upgrades
+```python
+import duckdb
+con = duckdb.connect()
+con.execute('''
+    SELECT subscription_id, cpc_list, activation_date, 
+           renewal_count, total_revenue_with_upgrade
+    FROM read_parquet('Parquet_Data/aggregated/subscriptions.parquet')
+    WHERE has_upgraded = TRUE
+    LIMIT 10
+''').fetchdf()
+```
+
+EXAMPLE 2: Revenue by CPC count
+```python
+con.execute('''
+    SELECT cpc_count, 
+           COUNT(*) as subs,
+           ROUND(AVG(total_revenue), 2) as avg_revenue,
+           ROUND(AVG(lifetime_days), 1) as avg_lifetime
+    FROM read_parquet('Parquet_Data/aggregated/subscriptions.parquet')
+    GROUP BY cpc_count
+''').fetchdf()
+```
+
+EXAMPLE 3: Active subscriptions by campaign
+```python
+con.execute('''
+    SELECT activation_campaign,
+           COUNT(*) as active_subs,
+           ROUND(SUM(total_revenue), 2) as revenue
+    FROM read_parquet('Parquet_Data/aggregated/subscriptions.parquet')
+    WHERE subscription_status = 'Active'
+    GROUP BY activation_campaign
+    ORDER BY active_subs DESC
+    LIMIT 10
+''').fetchdf()
+```
+
+EXAMPLE 4: Monthly cohort analysis
+```python
+con.execute('''
+    SELECT activation_month,
+           COUNT(*) as cohort_size,
+           SUM(CASE WHEN subscription_status = 'Active' THEN 1 ELSE 0 END) as still_active,
+           ROUND(AVG(lifetime_days), 1) as avg_lifetime,
+           ROUND(AVG(total_revenue), 2) as avg_revenue
+    FROM read_parquet('Parquet_Data/aggregated/subscriptions.parquet')
+    GROUP BY activation_month
+    ORDER BY activation_month DESC
+    LIMIT 12
+''').fetchdf()
+```
+
+================================================================================
+9. KEY TECHNICAL DECISIONS
+================================================================================
+
+1. PARTITIONING STRATEGY:
+   - Partition by year_month (YYYY-MM format)
+   - Enables efficient time-based queries
+   - Reduces scan overhead for recent data
+
+2. FILE FORMAT:
+   - Parquet with SNAPPY compression
+   - Columnar storage for analytical queries
+   - ~10x smaller than CSV
+
+3. TOOLS CHOSEN:
+   - Polars: Fast CSV reading and data manipulation
+   - PyArrow: Partitioned Parquet writing
+   - DuckDB: SQL queries on Parquet files
+
+4. UPGRADE HANDLING:
+   - Store CPC list chronologically
+   - Exclude UPGRADE DCT records from final deactivation
+   - Track upgrade_date and upgraded_to_cpc separately
+
+5. MISSING ACTIVATION HANDLING:
+   - Use act_date from RENO records
+   - Flag with missing_act_record boolean
+   - Infer activation details from first transaction
+
+================================================================================
+10. PERFORMANCE METRICS
+================================================================================
+
+HISTORICAL CONVERSION (one-time):
+- Processing time: ~2-3 minutes for full dataset
+- Output size: ~100 MB Parquet vs ~1 GB CSV
+
+DAILY PROCESSING:
+- Processing time: ~5-10 seconds
+- Incremental append to existing partitions
+
+SUBSCRIPTION VIEW BUILD:
+- Processing time: ~20 seconds
+- Output: 101.37 MB for 1M+ subscriptions
+
+QUERY PERFORMANCE:
+- Typical aggregation: <1 second
+- Full table scan: <5 seconds
+- Filtered queries: <0.5 seconds
+
+================================================================================
+11. IMPORTANT NOTES
+================================================================================
+
+1. ONE-TIME SCRIPTS (run once):
+   - 01_convert_historical.py
+
+2. DAILY SCRIPTS (run every day):
+   - 02_process_daily.py
+   - 05_build_subscription_view.py
+
+3. OPTIONAL SCRIPTS (run as needed):
+   - 03_validate_data.py (data quality checks)
+   - 04_test_queries.py (performance testing)
+
+4. FILE NAMING REQUIREMENTS:
+   - Daily files must include date: *_YYYY-MM-DD.csv
+   - Place in Daily_Data/ directory
+
+5. BACKUP RECOMMENDATIONS:
+   - Keep original CSV files
+   - Backup Parquet_Data/ directory regularly
+   - Version control Scripts/ directory
+
+================================================================================
+12. TROUBLESHOOTING
+================================================================================
+
+ISSUE: "Directory exists" error during historical conversion
+SOLUTION: Clean up empty directories before running:
+```bash
+find Parquet_Data/transactions -type d -empty -delete
+```
+
+ISSUE: Schema mismatch during daily processing
+SOLUTION: Ensure daily CSV files have same columns as historical
+Check with: pl.read_csv('file.csv').columns
+
+ISSUE: Missing year_month partition
+SOLUTION: Verify trans_date/cancel_date/refnd_date format is 'YYYY-MM-DD HH:MM:SS'
+
+ISSUE: Slow query performance
+SOLUTION: 
+- Ensure queries filter on year_month when possible
+- Use DuckDB for complex aggregations
+- Consider additional partitioning if needed
+
+================================================================================
+13. NEXT STEPS / FUTURE ENHANCEMENTS
+================================================================================
+
+1. Add data quality monitoring dashboard
+2. Implement automated alerts for anomalies
+3. Create materialized views for common queries
+4. Add incremental backup strategy
+5. Implement data retention policies
+6. Create BI tool integration (Tableau, PowerBI, etc.)
+7. Add user-level aggregations
+8. Implement churn prediction models
+9. Create revenue forecasting views
+10. Add campaign performance tracking
+
+================================================================================
+END OF SUMMARY
+================================================================================
+
+For questions or issues, refer to this document and the Scripts/ directory.
+All scripts are documented with inline comments explaining the logic.
+
+Last Updated: November 11, 2025
