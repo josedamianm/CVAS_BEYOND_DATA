@@ -42,12 +42,12 @@ fi
 
 echo "" >> "$LOGFILE"
 
-# Run 05_build_subscription_view.py
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Step 2: Running 05_build_subscription_view.py" >> "$LOGFILE"
-if /opt/anaconda3/bin/python "${SCRIPTS_DIR}/05_build_subscription_view.py" >> "$LOGFILE" 2>&1; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: 05_build_subscription_view.py completed" >> "$LOGFILE"
+# Run 03_build_subscription_view.py
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Step 2: Running 03_build_subscription_view.py" >> "$LOGFILE"
+if /opt/anaconda3/bin/python "${SCRIPTS_DIR}/03_build_subscription_view.py" >> "$LOGFILE" 2>&1; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: 03_build_subscription_view.py completed" >> "$LOGFILE"
 else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: 05_build_subscription_view.py failed with exit code $?" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: 03_build_subscription_view.py failed with exit code $?" >> "$LOGFILE"
     exit 1
 fi
 
