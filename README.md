@@ -18,6 +18,9 @@ CVAS_BEYOND_DATA/
 │   ├── 01_convert_historical.py   # Initial historical data conversion
 │   ├── 02_process_daily.py        # Daily incremental processing
 │   ├── 03_build_subscription_view.py  # Subscription aggregation
+│   ├── check_transactions_parquet_data.py  # Transaction data validation & performance testing
+│   ├── check_subscriptions_parquet_data.py # Subscription data validation & performance testing
+│   └── check_subscriptions.py     # Interactive subscription query tool
 │
 ├── Daily_Data/                     # Daily CSV transaction files (git-ignored)
 ├── Historical_Data/                # Historical CSV data (git-ignored)
@@ -145,12 +148,102 @@ cat Logs/1.GET_NBS_BASE.log
 cat Logs/2.PROCESS_DAILY_AND_BUILD_VIEW.log
 ```
 
+## Data Validation & Query Tools
+
+### Validation Scripts
+
+The project includes comprehensive validation scripts to ensure data quality and monitor pipeline performance:
+
+#### 1. Transaction Data Validation
+```bash
+python Scripts/check_transactions_parquet_data.py
+```
+
+Validates transaction parquet data with:
+- **Daily Data Completeness**: Checks for yesterday's transactions across all types (ACT, RENO, DCT, CNR, RFND, PPD)
+- **Monthly Summary**: Aggregates transaction counts and revenue by month and type
+- **Data Validation**: Verifies row counts, date ranges, schema integrity, and data quality
+- **Query Performance**: Tests query execution times for optimization monitoring
+
+#### 2. Subscription Data Validation
+```bash
+python Scripts/check_subscriptions_parquet_data.py
+```
+
+Validates subscription aggregated data with:
+- **Daily Data Completeness**: Checks for recent activations, renewals, deactivations, and cancellations
+- **Monthly Summary**: Aggregates subscription metrics by month (activations, renewals, revenue, etc.)
+- **Data Validation**: Verifies subscription counts, date ranges, schema, and data quality
+- **Query Performance**: Tests aggregation query performance
+
+### Interactive Query Tool
+
+#### Subscription Query Tool
+```bash
+python Scripts/check_subscriptions.py
+```
+
+Interactive tool for querying subscription data with three query modes:
+
+**Query Options:**
+1. **By Subscription ID** - Query a single subscription
+2. **By User ID (tmuserid)** - Query all subscriptions for a user (may return multiple)
+3. **By MSISDN** - Query all subscriptions for a phone number (may return multiple)
+
+**Output Sections:**
+- **Section 1: Summary Per Subscription** - Detailed information for each subscription including:
+  - Basic information (ID, user, MSISDN, status, lifetime)
+  - CPC information (list, count, upgrades)
+  - Activation details (dates, campaign, channel, revenue)
+  - Renewal information (count, revenue, dates)
+  - Termination details (deactivation, cancellation)
+  - Financial summary (activation, renewal, total revenue, refunds)
+
+- **Section 2: Aggregated Summary** - Overall statistics across all matching subscriptions:
+  - Overall statistics (total subscriptions, revenue, renewals, etc.)
+  - CPC breakdown by first_cpc
+  - Status breakdown (Active, Deactivated, Cancelled)
+  - Subscription timeline
+  - Key insights with actionable information
+
+- **Section 3: Complete Raw Data Output** - All columns from the parquet file in table format
+
+- **Section 4: Detailed Column-by-Column Breakdown** - Each field organized by category for easy reading
+
+**Features:**
+- Interactive menu-driven interface
+- Supports multiple queries in a single session
+- Comprehensive output with 4 detailed sections
+- Works from any directory (uses absolute paths)
+
+**Example Usage:**
+```bash
+$ python Scripts/check_subscriptions.py
+
+====================================================================================================
+SUBSCRIPTION QUERY TOOL
+====================================================================================================
+
+Select query type:
+  1. Query by Subscription ID (single subscription)
+  2. Query by User ID (tmuserid - may return multiple subscriptions)
+  3. Query by MSISDN (phone number - may return multiple subscriptions)
+  0. Exit
+
+Enter your choice (0-3): 1
+Enter Subscription ID: 10151796
+
+# ... detailed output follows ...
+```
+
 ## Notes
 
 - Script 2 depends on Script 1 completing successfully
 - Data files are excluded from Git (see `.gitignore`)
 - SSH key authentication required for remote data access
 - Designed for macOS environment (uses `date -v-1d` syntax)
+- Validation scripts should be run regularly to ensure data quality
+- Query tool provides instant access to subscription details for troubleshooting
 
 ## License
 
