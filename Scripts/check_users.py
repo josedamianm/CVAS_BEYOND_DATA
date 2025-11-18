@@ -320,74 +320,37 @@ def print_raw_output(result):
     print('\n\n' + '=' * 100)
     print('SECTION 3: COMPLETE RAW DATA OUTPUT')
     print('=' * 100)
-    print('\nAll columns and values as stored in the parquet file:\n')
-
-    with pl.Config(
-        tbl_rows=-1,
-        tbl_cols=-1,
-        tbl_width_chars=1000,
-        fmt_str_lengths=100
-    ):
-        print(result)
-
-    print('\n\n' + '=' * 100)
-    print('SECTION 4: DETAILED COLUMN-BY-COLUMN BREAKDOWN')
-    print('=' * 100)
+    print('\nAll columns and values as stored in the parquet file (vertical format):\n')
 
     for idx in range(len(result)):
         row = result.row(idx, named=True)
 
-        print(f'\n{"=" * 100}')
-        print(f'SUBSCRIPTION #{idx + 1} - ID: {row["subscription_id"]}')
-        print('=' * 100)
+        print(f'{"*" * 100}')
+        print(f'Row {idx + 1} (Subscription ID: {row.get("subscription_id", "N/A")})')
+        print(f'{"*" * 100}')
 
-        categories = {
-            'IDENTIFIERS': [
-                'subscription_id', 'tmuserid', 'msisdn'
-            ],
-            'CPC INFORMATION': [
-                'cpc_list', 'cpc_count', 'first_cpc', 'current_cpc',
-                'has_upgraded', 'upgrade_date', 'upgraded_to_cpc'
-            ],
-            'ACTIVATION': [
-                'activation_date', 'activation_trans_date', 'activation_month',
-                'missing_act_record', 'activation_campaign', 'activation_channel',
-                'activation_revenue'
-            ],
-            'RENEWAL': [
-                'renewal_count', 'renewal_revenue', 'first_renewal_date',
-                'last_renewal_date', 'last_activity_date'
-            ],
-            'DEACTIVATION': [
-                'deactivation_date', 'deactivation_mode'
-            ],
-            'CANCELLATION': [
-                'cancellation_date', 'cancellation_mode'
-            ],
-            'REFUND': [
-                'refund_count', 'total_refunded', 'last_refund_date'
-            ],
-            'FINANCIAL': [
-                'total_revenue', 'total_revenue_with_upgrade'
-            ],
-            'STATUS & LIFECYCLE': [
-                'subscription_status', 'lifetime_days', 'end_date'
-            ]
-        }
+        # Determine the width for the longest column name for alignment
+        try:
+            keys = list(row.keys())
+        except Exception:
+            keys = []
+        max_col_width = max((len(str(k)) for k in keys), default=0)
 
-        for category, columns in categories.items():
-            print(f'\n{category}:')
-            print('-' * 100)
-            for col in columns:
-                if col in row:
-                    value = row[col]
-                    if value is None:
-                        formatted_value = 'NULL'
-                    elif isinstance(value, float):
-                        formatted_value = f'{value:.2f}'
-                    else:
-                        formatted_value = str(value)
-                    print(f'  {col:<30} = {formatted_value}')
+        for col_name in keys:
+            value = row.get(col_name)
+            if value is None:
+                formatted_value = 'NULL'
+            elif isinstance(value, float):
+                formatted_value = f'{value:.2f}'
+            elif isinstance(value, list) or isinstance(value, tuple):
+                formatted_value = str(value)
+            else:
+                formatted_value = str(value)
+
+            print(f'{col_name.rjust(max_col_width)}: {formatted_value}')
+
+        if idx < len(result) - 1:
+            print()
 
 
 def main():
