@@ -170,8 +170,17 @@ cat Logs/2.FETCH_DAILY_DATA.log
 cat Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log
 
 # Or view real-time logs
-tail -f Logs/run_all_scripts.log
+tail -f Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log
 ```
+
+### Log Rotation
+
+All orchestration scripts automatically rotate their logs to keep only the last 7 days of entries. This prevents log files from growing indefinitely:
+
+- Logs are rotated at the start of each script execution
+- Only entries from the last 7 days are retained
+- Older entries are automatically removed
+- No manual cleanup required
 
 ## Data Validation & Query Tools
 
