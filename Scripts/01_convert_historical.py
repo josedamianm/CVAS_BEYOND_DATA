@@ -9,11 +9,26 @@ def convert_historical_csvs():
     Convert all historical CSV files to partitioned Parquet format
     """
     
-    # Define paths
-    #historical_path = Path('Historical_Data')
-    historical_path = Path('/Users/josemanco/Dropbox/BEYOND_DATA_OLD_backup/Historical_Data')
-    #parquet_path = Path('Parquet_Data/transactions')
-    parquet_path = Path('/Users/josemanco/CVAS/CVAS_BEYOND_DATA/Parquet_Data/transactions')
+    project_root = Path(__file__).parent.parent
+    
+    # Get historical path from args or prompt
+    if len(sys.argv) > 1:
+        historical_path = Path(sys.argv[1])
+    else:
+        print(f"\nDefault Historical Data path: {project_root / 'Historical_Data'}")
+        user_input = input("Enter path to Historical Data (press Enter for default): ").strip()
+        if user_input:
+            historical_path = Path(user_input)
+        else:
+            historical_path = project_root / 'Historical_Data'
+    
+    if not historical_path.exists():
+        print(f"❌ Error: Path does not exist: {historical_path}")
+        return
+
+    parquet_path = project_root / 'Parquet_Data' / 'transactions'
+    # The instruction provided a duplicate line for parquet_path, keeping the one that uses project_root.
+    # parquet_path = Path('/Users/josemanco/CVAS/CVAS_BEYOND_DATA/Parquet_Data/transactions')
     
     # Define file types and their patterns
     file_types = {

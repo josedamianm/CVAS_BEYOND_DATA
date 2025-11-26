@@ -1,42 +1,54 @@
 #!/bin/bash
 
-# Directory containing the scripts
-SCRIPT_DIR="/BEYOND_DATA_OLD/Scripts_Bash"
+# ==============================================================================
+# Master Update Script
+# Orchestrates the fetching of all daily data types using the unified fetch script.
+# ==============================================================================
 
-# Array of script names
-SCRIPTS=(
-    "update_act_atlas_day.sh"
-    "update_cnr_atlas_day.sh"
-    "update_dct_atlas_day.sh"
-    "update_ppd_atlas_day.sh"
-    "update_reno_atlas_day.sh"
-    "update_rfnd_atlas_day.sh"
-    "update_subs_base.sh"
-    "update_vp_subs.sh"
+# Configuration
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+FETCH_SCRIPT="${PROJECT_ROOT}/Scripts/fetch_remote_data.sh"
+LOG_FILE="${PROJECT_ROOT}/Logs/run_all_scripts.log"
+
+# Transaction types to process
+TYPES=(
+    "act"
+    "cnr"
+    "dct"
+    "ppd"
+    "reno"
+    "rfnd"
 )
 
-# Log file
-LOG_FILE="/BEYOND_DATA_OLD/LOGS/run_all_scripts.log"
-
 # Start logging
+mkdir -p "${PROJECT_ROOT}/Logs"
 exec > >(tee -a ${LOG_FILE}) 2>&1
-echo "[$(date)] Starting execution of all scripts."
 
-# Change to the script directory
-cd ${SCRIPT_DIR} || { echo "[$(date)] Failed to change directory to ${SCRIPT_DIR}." >&2; exit 1; }
+echo "[$(date)] ========================================"
+echo "[$(date)] STARTING DAILY DATA UPDATE"
+echo "[$(date)] ========================================"
 
-# Run each script
-for SCRIPT in "${SCRIPTS[@]}"; do
-    echo "[$(date)] Running ${SCRIPT}..."
-    ./${SCRIPT}
+# Make sure fetch script is executable
+chmod +x "$FETCH_SCRIPT"
+
+# Run fetch for each type
+for TYPE in "${TYPES[@]}"; do
+    echo "[$(date)] Processing TYPE: ${TYPE}..."
     
-    # Check if the script was successful
+    # Call the unified script
+    "$FETCH_SCRIPT" "$TYPE"
+    
+    # Check status
     if [ $? -ne 0 ]; then
-        echo "[$(date)] Error occurred while running ${SCRIPT}." >&2
-        exit 1
+        echo "[$(date)] ❌ ERROR: Failed to fetch ${TYPE} data."
+        # We continue to the next type even if one fails
     else
-        echo "[$(date)] ${SCRIPT} completed successfully."
+        echo "[$(date)] ✓ SUCCESS: ${TYPE} data updated."
     fi
+    echo ""
 done
 
-echo "[$(date)] All scripts executed successfully."
+echo "[$(date)] ========================================"
+echo "[$(date)] DAILY DATA UPDATE COMPLETED"
+echo "[$(date)] ========================================"
