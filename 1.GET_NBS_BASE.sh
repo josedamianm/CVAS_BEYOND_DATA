@@ -50,6 +50,6 @@ fi
 
 sleep 2
 
-python /Users/josemanco/CVAS/CVAS_BEYOND_DATA/User_Base/aggregate_user_base.py >> $LOGFILE
+python /Users/josemanco/CVAS/CVAS_BEYOND_DATA/Scripts/aggregate_user_base.py >> $LOGFILE
 
 

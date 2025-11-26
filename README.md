@@ -11,26 +11,31 @@ This pipeline processes multiple transaction types (activations, renewals, deact
 ```
 CVAS_BEYOND_DATA/
 ├── 1.GET_NBS_BASE.sh              # Script 1: Downloads NBS user base data (runs 8:05 AM)
-├── 2.PROCESS_DAILY_AND_BUILD_VIEW.sh  # Script 2: Processes daily data (runs 11:30 AM)
+├── 2.FETCH_DAILY_DATA.sh          # Script 2: Fetches daily transaction data from Nova (runs 8:25 AM)
+├── 3.PROCESS_DAILY_AND_BUILD_VIEW.sh  # Script 3: Processes daily data (runs 11:30 AM)
 ├── How2Manage_Launchd_Jobs.txt    # Documentation for managing scheduled jobs
+├── requirements.txt               # Python dependencies
 │
-├── Scripts/                        # Python processing scripts
-│   ├── 01_convert_historical.py   # Initial historical data conversion
-│   ├── 02_process_daily.py        # Daily incremental processing
-│   ├── 03_build_subscription_view.py  # Subscription aggregation
+├── Scripts/                        # Python and shell processing scripts
+│   ├── 01_convert_historical.py   # Historical data conversion (interactive)
+│   ├── 02_fetch_remote_nova_data.sh  # Unified remote data fetching script
+│   ├── 03_process_daily.py        # Daily incremental processing
+│   ├── 04_build_subscription_view.py  # Subscription aggregation
+│   ├── aggregate_user_base.py     # User base aggregation script
 │   ├── check_transactions_parquet_data.py  # Transaction data validation & performance testing
 │   ├── check_subscriptions_parquet_data.py # Subscription data validation & performance testing
-│   └── check_subscriptions.py     # Interactive subscription query tool
+│   ├── check_users.py             # Interactive subscription query tool
+│   └── extract_music_subscriptions.py  # Music subscription extraction
 │
 ├── Daily_Data/                     # Daily CSV transaction files (git-ignored)
-├── Historical_Data/                # Historical CSV data (git-ignored)
 ├── Parquet_Data/                   # Columnar storage (git-ignored)
 │   ├── transactions/              # Partitioned by transaction type and year_month
 │   └── aggregated/                # Aggregated subscription views
 │
 ├── User_Base/                      # User base data
 │   ├── NBS_BASE/                  # Daily NBS snapshots (git-ignored)
-│   └── aggregate_user_base.py     # User base aggregation script
+│   ├── user_base_by_service.csv   # Aggregated by service (git-ignored)
+│   └── user_base_by_category.csv  # Aggregated by category (git-ignored)
 │
 └── Logs/                          # Execution logs (git-ignored)
 ```
@@ -60,23 +65,23 @@ The pipeline processes six transaction types:
 
 ```bash
 # Install required Python packages
-pip install polars duckdb pyarrow
+pip install -r requirements.txt
 ```
 
 ### Configuration
 
-The scripts use absolute paths that need to be updated for your environment:
+The scripts now use relative paths based on the project root. Key configuration:
 
-1. Update paths in shell scripts (`1.GET_NBS_BASE.sh`, `2.PROCESS_DAILY_AND_BUILD_VIEW.sh`)
-2. Update paths in Python scripts (look for `/Users/josemanco/...` references)
-3. Configure SSH access for remote data retrieval (Script 1)
+1. **SSH Access**: Configure SSH keys for remote data retrieval (Scripts 1 & 2)
+2. **Python Environment**: Ensure Python path is correct in shell scripts (default: `/opt/anaconda3/bin/python`)
+3. **Remote Server**: Update `REMOTE_USER` and `REMOTE_HOST` in `Scripts/02_fetch_remote_nova_data.sh` if needed
 
 ### Directory Structure
 
 Ensure all data directories exist:
 
 ```bash
-mkdir -p Daily_Data Historical_Data Parquet_Data/transactions Parquet_Data/aggregated User_Base/NBS_BASE Logs
+mkdir -p Daily_Data Parquet_Data/transactions Parquet_Data/aggregated User_Base/NBS_BASE Logs
 ```
 
 ## Usage
@@ -89,29 +94,42 @@ Run scripts directly for testing:
 # Script 1: Download NBS user base
 bash 1.GET_NBS_BASE.sh
 
-# Script 2: Process daily data and build views
-bash 2.PROCESS_DAILY_AND_BUILD_VIEW.sh
+# Script 2: Fetch daily transaction data from Nova
+bash 2.FETCH_DAILY_DATA.sh
+
+# Script 3: Process daily data and build views
+bash 3.PROCESS_DAILY_AND_BUILD_VIEW.sh
+
+# Or run individual transaction types:
+bash Scripts/02_fetch_remote_nova_data.sh act    # Fetch activations only
+bash Scripts/02_fetch_remote_nova_data.sh all    # Fetch all types
 ```
 
 ### Automated Scheduling
 
 The system uses macOS launchd for automated daily execution:
 
-- **Script 1** runs at 8:05 AM daily
-- **Script 2** runs at 11:30 AM daily (depends on Script 1 completion)
+- **Script 1** runs at 8:05 AM daily (NBS user base)
+- **Script 2** runs at 8:25 AM daily (Nova transaction data)
+- **Script 3** runs at 11:30 AM daily (Processing and aggregation)
 
-See `How2Manage_Launchd_Jobs.txt` for detailed scheduling management instructions.
+Each script depends on the previous one completing successfully. See `How2Manage_Launchd_Jobs.txt` for detailed scheduling management instructions.
 
 ### Processing Workflow
 
-1. **Data Collection** (8:05 AM)
+1. **NBS User Base Collection** (8:05 AM)
    - Downloads NBS user base from remote server
-   - Aggregates user base data
+   - Aggregates user base data by service and category
 
-2. **Data Processing** (11:30 AM)
+2. **Transaction Data Fetch** (8:25 AM)
+   - Connects to Nova PostgreSQL server via SSH
+   - Executes SQL queries for all transaction types (ACT, RENO, DCT, CNR, RFND, PPD)
+   - Downloads CSV files to `Daily_Data/`
+
+3. **Data Processing & Aggregation** (11:30 AM)
    - Converts daily CSV files to Parquet format
    - Partitions data by transaction type and year_month
-   - Builds aggregated subscription views
+   - Builds aggregated subscription views with lifecycle tracking
 
 ## Data Pipeline
 
@@ -129,7 +147,7 @@ Daily CSV Files → Parquet Storage (Hive Partitioned) → Aggregated Views
 
 ## Subscription View
 
-The aggregated subscription view (`05_build_subscription_view.py`) provides:
+The aggregated subscription view (`Scripts/04_build_subscription_view.py`) provides:
 
 - Complete subscription lifecycle tracking
 - CPC (Content Provider Code) change history
@@ -145,7 +163,11 @@ Check execution logs:
 ```bash
 # View latest execution logs
 cat Logs/1.GET_NBS_BASE.log
-cat Logs/2.PROCESS_DAILY_AND_BUILD_VIEW.log
+cat Logs/2.FETCH_DAILY_DATA.log
+cat Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log
+
+# Or view real-time logs
+tail -f Logs/run_all_scripts.log
 ```
 
 ## Data Validation & Query Tools
@@ -180,7 +202,7 @@ Validates subscription aggregated data with:
 
 #### Subscription Query Tool
 ```bash
-python Scripts/check_subscriptions.py
+python Scripts/check_users.py
 ```
 
 Interactive tool for querying subscription data with three query modes:
@@ -218,7 +240,7 @@ Interactive tool for querying subscription data with three query modes:
 
 **Example Usage:**
 ```bash
-$ python Scripts/check_subscriptions.py
+$ python Scripts/check_users.py
 
 ====================================================================================================
 SUBSCRIPTION QUERY TOOL
@@ -238,10 +260,12 @@ Enter Subscription ID: 10151796
 
 ## Notes
 
-- Script 2 depends on Script 1 completing successfully
+- Scripts run sequentially: Script 1 → Script 2 → Script 3
+- All scripts use relative paths for portability
 - Data files are excluded from Git (see `.gitignore`)
-- SSH key authentication required for remote data access
-- Designed for macOS environment (uses `date -v-1d` syntax)
+- SSH key authentication required for remote data access (Scripts 1 & 2)
+- Cross-platform date handling (supports both macOS and Linux)
+- Historical data conversion (`01_convert_historical.py`) is interactive and prompts for data path
 - Validation scripts should be run regularly to ensure data quality
 - Query tool provides instant access to subscription details for troubleshooting
 

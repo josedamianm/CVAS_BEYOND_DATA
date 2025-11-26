@@ -13,9 +13,10 @@ from collections import defaultdict
 from datetime import datetime
 
 # Configuration
-NBS_BASE_DIR = "/Users/josemanco/CVAS/CVAS_BEYOND_DATA/User_Base/NBS_BASE"
-SERVICE_OUTPUT = "/Users/josemanco/CVAS/CVAS_BEYOND_DATA/User_Base/user_base_by_service.csv"
-CATEGORY_OUTPUT = "/Users/josemanco/CVAS/CVAS_BEYOND_DATA/User_Base/user_base_by_category.csv"
+PROJECT_ROOT = Path(__file__).parent.parent
+NBS_BASE_DIR = PROJECT_ROOT / "User_Base" / "NBS_BASE"
+SERVICE_OUTPUT = PROJECT_ROOT / "User_Base" / "user_base_by_service.csv"
+CATEGORY_OUTPUT = PROJECT_ROOT / "User_Base" / "user_base_by_category.csv"
 
 def extract_date_from_filename(filename):
     """Extract date from filename format: YYYYMMDD_NBS_Base.csv and convert to YYYY-MM-DD"""
