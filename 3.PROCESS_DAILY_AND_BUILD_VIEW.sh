@@ -16,7 +16,32 @@ else
     yday="$1"
 fi
 
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ========================================" >> "$LOGFILE"
 echo "Processing date: ${yday}" >> "$LOGFILE"
+
+# Validate that required daily data files exist
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validating daily data files..." >> "$LOGFILE"
+
+REQUIRED_FILES=(
+    "${SCRIPT_DIR}/Daily_Data/act_atlas_day.csv"
+    "${SCRIPT_DIR}/Daily_Data/reno_atlas_day.csv"
+    "${SCRIPT_DIR}/Daily_Data/dct_atlas_day.csv"
+)
+
+MISSING_FILES=()
+for file in "${REQUIRED_FILES[@]}"; do
+    if [ ! -f "$file" ]; then
+        MISSING_FILES+=("$(basename "$file")")
+    fi
+done
+
+if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Missing required data files: ${MISSING_FILES[*]}" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Please run 2.FETCH_DAILY_DATA.sh first" >> "$LOGFILE"
+    exit 1
+fi
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ All required data files present" >> "$LOGFILE"
 
 # 1. Process Daily Data
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting 03_process_daily.py for date: ${yday}..." >> "$LOGFILE"
@@ -26,6 +51,14 @@ else
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: 03_process_daily.py failed with exit code $?" >> "$LOGFILE"
     exit 1
 fi
+
+# Validate that parquet data was created
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validating parquet data..." >> "$LOGFILE"
+if [ ! -d "${SCRIPT_DIR}/Parquet_Data/transactions/act" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Parquet data directory not found" >> "$LOGFILE"
+    exit 1
+fi
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Parquet data validated" >> "$LOGFILE"
 
 # 2. Build Subscription View
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting 04_build_subscription_view.py..." >> "$LOGFILE"

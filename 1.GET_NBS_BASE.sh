@@ -49,8 +49,27 @@ else
     exit 1
 fi
 
+# Validate that the file was actually downloaded and has content
+if [ ! -f "$DEST_FILE" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Downloaded file not found: $DEST_FILE" >> "$LOGFILE"
+    exit 1
+fi
+
+FILE_SIZE=$(stat -f%z "$DEST_FILE" 2>/dev/null || stat -c%s "$DEST_FILE" 2>/dev/null)
+if [ "$FILE_SIZE" -lt 100 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Downloaded file is too small (${FILE_SIZE} bytes), likely empty or corrupt" >> "$LOGFILE"
+    exit 1
+fi
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] File validation passed: ${FILE_SIZE} bytes" >> "$LOGFILE"
+
 sleep 2
 
-python "${SCRIPT_DIR}/Scripts/aggregate_user_base.py" >> $LOGFILE
+# Run aggregation script
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting user base aggregation..." >> "$LOGFILE"
+if python "${SCRIPT_DIR}/Scripts/aggregate_user_base.py" >> $LOGFILE 2>&1; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: User base aggregation completed" >> "$LOGFILE"
+else
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: User base aggregation failed with exit code $?" >> "$LOGFILE"
 
 
