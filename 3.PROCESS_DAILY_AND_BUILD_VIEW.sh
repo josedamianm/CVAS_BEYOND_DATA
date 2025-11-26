@@ -4,7 +4,13 @@
 # Get script directory and use relative paths
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SCRIPTS_DIR="${SCRIPT_DIR}/Scripts"
-LOGFILE="${SCRIPT_DIR}/Logs/process_daily.log"
+LOGFILE="${SCRIPT_DIR}/Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log"
+
+# Source log rotation utility
+source "${SCRIPT_DIR}/Scripts/utils/log_rotation.sh"
+
+# Rotate log to keep only last 7 days
+rotate_log "$LOGFILE"
 
 # Ensure log directory exists
 mkdir -p "${SCRIPT_DIR}/Logs"

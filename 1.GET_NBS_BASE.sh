@@ -25,6 +25,12 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOGFILE="${SCRIPT_DIR}/Logs/1.GET_NBS_BASE.log"
 DEST_DIR="${SCRIPT_DIR}/User_Base/NBS_BASE"
 
+# Source log rotation utility
+source "${SCRIPT_DIR}/Scripts/utils/log_rotation.sh"
+
+# Rotate log to keep only last 7 days
+rotate_log "$LOGFILE"
+
 if [ $# -eq 0 ]; then
     # Default mode: download for yesterday
     yday=$(date -v-1d +"%Y%m%d")

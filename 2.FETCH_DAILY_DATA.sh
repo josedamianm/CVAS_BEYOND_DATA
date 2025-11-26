@@ -8,7 +8,13 @@
 # Configuration
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 FETCH_SCRIPT="${SCRIPT_DIR}/Scripts/02_fetch_remote_nova_data.sh"
-LOG_FILE="${SCRIPT_DIR}/Logs/run_all_scripts.log"
+LOG_FILE="${SCRIPT_DIR}/Logs/2.FETCH_DAILY_DATA.log"
+
+# Source log rotation utility
+source "${SCRIPT_DIR}/Scripts/utils/log_rotation.sh"
+
+# Rotate log to keep only last 7 days
+rotate_log "$LOG_FILE"
 
 # Start logging
 mkdir -p "${SCRIPT_DIR}/Logs"
