@@ -1,6 +1,5 @@
 # Data Files - Exclude all data files but keep folder structure
 Daily_Data/*.csv
-Historical_Data/*.csv
 Parquet_Data/**/*
 !Parquet_Data/.gitkeep
 
