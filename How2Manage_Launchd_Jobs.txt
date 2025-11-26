@@ -6,14 +6,16 @@
 OVERVIEW
 ================================================================================
 Script 1: 1.GET_NBS_BASE.sh (Runs 8:05 AM) → com.josemanco.nbs_base
-Script 2: 2.PROCESS_DAILY_AND_BUILD_VIEW.sh (Runs 11:30 AM) → com.josemanco.process_daily
+Script 2: 2.FETCH_DAILY_DATA.sh (Runs 8:25 AM) → com.josemanco.fetch_daily
+Script 3: 3.PROCESS_DAILY_AND_BUILD_VIEW.sh (Runs 11:30 AM) → com.josemanco.process_daily
 
 Script 2 depends on Script 1 completing first!
+Script 3 depends on Script 2 completing first!
 
 ================================================================================
 CHANGE SCHEDULED TIME
 ================================================================================
-Replace <job> with: nbs_base OR process_daily
+Replace <job> with: nbs_base OR fetch_daily OR process_daily
 
 1. Edit the plist:
    nvim /Users/josemanco/Library/LaunchAgents/com.josemanco.<job>.plist
@@ -33,18 +35,21 @@ TEST MANUALLY (without changing time)
 ================================================================================
 # Method 1: Run script directly
 bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/1.GET_NBS_BASE.sh
-bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/2.PROCESS_DAILY_AND_BUILD_VIEW.sh
+bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/2.FETCH_DAILY_DATA.sh
+bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/3.PROCESS_DAILY_AND_BUILD_VIEW.sh
 
 # Method 2: Trigger via launchctl (same environment as scheduled run)
 launchctl start com.josemanco.nbs_base
+launchctl start com.josemanco.fetch_daily
 launchctl start com.josemanco.process_daily
 
 # Check logs:
 cat /Users/josemanco/CVAS/CVAS_BEYOND_DATA/Logs/1.GET_NBS_BASE.log
-cat /Users/josemanco/CVAS/CVAS_BEYOND_DATA/Logs/2.PROCESS_DAILY_AND_BUILD_VIEW.log
+cat /Users/josemanco/CVAS/CVAS_BEYOND_DATA/Logs/2.FETCH_DAILY_DATA.log
+cat /Users/josemanco/CVAS/CVAS_BEYOND_DATA/Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log
 
 ================================================================================
-USEFUL COMMANDS (replace <job> with: nbs_base OR process_daily)
+USEFUL COMMANDS (replace <job> with: nbs_base OR fetch_daily OR process_daily)
 ================================================================================
 # Check if job is loaded
 launchctl list | grep com.josemanco.<job>
