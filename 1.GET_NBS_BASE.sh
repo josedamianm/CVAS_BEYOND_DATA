@@ -20,9 +20,10 @@
 ################################################
 ################################################
 
-# Log configuration
-LOGFILE="/Users/josemanco/CVAS/CVAS_BEYOND_DATA/Logs/1.GET_NBS_BASE.log"
-DEST_DIR="/Users/josemanco/CVAS/CVAS_BEYOND_DATA/User_Base/NBS_BASE"
+# Get script directory and set paths relative to it
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+LOGFILE="${SCRIPT_DIR}/Logs/1.GET_NBS_BASE.log"
+DEST_DIR="${SCRIPT_DIR}/User_Base/NBS_BASE"
 
 if [ $# -eq 0 ]; then
     # Default mode: download for yesterday
@@ -50,6 +51,6 @@ fi
 
 sleep 2
 
-python /Users/josemanco/CVAS/CVAS_BEYOND_DATA/Scripts/aggregate_user_base.py >> $LOGFILE
+python "${SCRIPT_DIR}/Scripts/aggregate_user_base.py" >> $LOGFILE
 
 

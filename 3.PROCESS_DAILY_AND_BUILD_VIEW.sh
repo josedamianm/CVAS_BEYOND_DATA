@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-# Use relative path for scripts directory
+# Get script directory and use relative paths
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SCRIPTS_DIR="${SCRIPT_DIR}/Scripts"
 LOGFILE="${SCRIPT_DIR}/Logs/process_daily.log"
