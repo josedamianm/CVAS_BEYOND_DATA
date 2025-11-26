@@ -27,6 +27,9 @@ CVAS_BEYOND_DATA/
 │   ├── check_users.py             # Interactive subscription query tool
 │   └── extract_music_subscriptions.py  # Music subscription extraction
 │
+├── sql/                            # SQL queries
+│   └── build_subscription_view.sql  # Subscription aggregation query (230+ lines)
+│
 ├── Daily_Data/                     # Daily CSV transaction files (git-ignored)
 ├── Parquet_Data/                   # Columnar storage (git-ignored)
 │   ├── transactions/              # Partitioned by transaction type and year_month
