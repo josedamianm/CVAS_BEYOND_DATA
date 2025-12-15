@@ -26,57 +26,97 @@ else
     yday="$1"
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] ========================================" >> "$LOGFILE"
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Processing date: ${yday}" >> "$LOGFILE"
+# ============================================================================
+# START OF RUN - Day Separator
+# ============================================================================
+echo "" >> "$LOGFILE"
+echo "================================================================================" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] SCRIPT 3: PROCESS DAILY AND BUILD VIEW - START" >> "$LOGFILE"
+echo "================================================================================" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Target Date: ${yday}" >> "$LOGFILE"
+echo "" >> "$LOGFILE"
 
-# Validate that required daily data files exist
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validating daily data files..." >> "$LOGFILE"
+# ============================================================================
+# STEP 1: Validate Daily Data Files
+# ============================================================================
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ┌─────────────────────────────────────────────────────────┐" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] │ STEP 1: VALIDATING DAILY DATA FILES                     │" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] └─────────────────────────────────────────────────────────┘" >> "$LOGFILE"
 
 REQUIRED_FILES=(
     "${SCRIPT_DIR}/Daily_Data/act_atlas_day.csv"
     "${SCRIPT_DIR}/Daily_Data/reno_atlas_day.csv"
     "${SCRIPT_DIR}/Daily_Data/dct_atlas_day.csv"
+    "${SCRIPT_DIR}/Daily_Data/cnr_atlas_day.csv"
+    "${SCRIPT_DIR}/Daily_Data/ppd_atlas_day.csv"
+    "${SCRIPT_DIR}/Daily_Data/rfnd_atlas_day.csv"
 )
 
 MISSING_FILES=()
 for file in "${REQUIRED_FILES[@]}"; do
     if [ ! -f "$file" ]; then
         MISSING_FILES+=("$(basename "$file")")
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ Missing: $(basename "$file")" >> "$LOGFILE"
+    else
+        FILE_SIZE=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
+        FILE_SIZE_KB=$((FILE_SIZE / 1024))
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Found: $(basename "$file") (${FILE_SIZE_KB} KB)" >> "$LOGFILE"
     fi
 done
 
 if [ ${#MISSING_FILES[@]} -gt 0 ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Missing required data files: ${MISSING_FILES[*]}" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ ERROR: Missing ${#MISSING_FILES[@]} required file(s)" >> "$LOGFILE"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Please run 2.FETCH_DAILY_DATA.sh first" >> "$LOGFILE"
     exit 1
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] All required data files present" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ All 6 data files validated successfully" >> "$LOGFILE"
+echo "" >> "$LOGFILE"
 
-# 1. Process Daily Data
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting 03_process_daily.py for date: ${yday}..." >> "$LOGFILE"
+# ============================================================================
+# STEP 2: Process Daily Data to Parquet
+# ============================================================================
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ┌─────────────────────────────────────────────────────────┐" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] │ STEP 2: PROCESSING DAILY DATA (CSV → PARQUET)           │" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] └─────────────────────────────────────────────────────────┘" >> "$LOGFILE"
+
 if /opt/anaconda3/bin/python "${SCRIPTS_DIR}/03_process_daily.py" "${yday}" >> "$LOGFILE" 2>&1; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: 03_process_daily.py completed" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Daily data processing completed successfully" >> "$LOGFILE"
 else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: 03_process_daily.py failed with exit code $?" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ ERROR: Daily data processing failed (exit code: $?)" >> "$LOGFILE"
     exit 1
 fi
 
-# Validate that parquet data was created
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validating parquet data..." >> "$LOGFILE"
+# Validate parquet data was created
 if [ ! -d "${SCRIPT_DIR}/Parquet_Data/transactions/act" ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Parquet data directory not found" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ ERROR: Parquet data directory not found" >> "$LOGFILE"
     exit 1
 fi
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Parquet data validated" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Parquet data structure validated" >> "$LOGFILE"
+echo "" >> "$LOGFILE"
 
-# 2. Build Subscription View
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting 04_build_subscription_view.py..." >> "$LOGFILE"
+# ============================================================================
+# STEP 3: Build Subscription View
+# ============================================================================
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ┌─────────────────────────────────────────────────────────┐" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] │ STEP 3: BUILDING SUBSCRIPTION VIEW                      │" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] └─────────────────────────────────────────────────────────┘" >> "$LOGFILE"
+
 if /opt/anaconda3/bin/python "${SCRIPTS_DIR}/04_build_subscription_view.py" >> "$LOGFILE" 2>&1; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: 04_build_subscription_view.py completed" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Subscription view build completed successfully" >> "$LOGFILE"
 else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: 04_build_subscription_view.py failed with exit code $?" >> "$LOGFILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ ERROR: Subscription view build failed (exit code: $?)" >> "$LOGFILE"
     exit 1
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] ALL PROCESSING COMPLETED SUCCESSFULLY" >> "$LOGFILE"
+# ============================================================================
+# END OF RUN - Summary
+# ============================================================================
+echo "" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ┌─────────────────────────────────────────────────────────┐" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] │ ✓ ALL TASKS COMPLETED SUCCESSFULLY                      │" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] └─────────────────────────────────────────────────────────┘" >> "$LOGFILE"
+echo "================================================================================" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] SCRIPT 3: PROCESS DAILY AND BUILD VIEW - END (SUCCESS)" >> "$LOGFILE"
+echo "================================================================================" >> "$LOGFILE"
+echo "" >> "$LOGFILE"
