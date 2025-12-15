@@ -110,7 +110,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] ┌─────────────�
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] │ STEP 3: AGGREGATING USER BASE DATA                      │" >> "$LOGFILE"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] └─────────────────────────────────────────────────────────┘" >> "$LOGFILE"
 
-if /opt/anaconda3/bin/python "${SCRIPT_DIR}/Scripts/aggregate_user_base.py" >> "$LOGFILE" 2>&1; then
+if /opt/anaconda3/bin/python "${SCRIPT_DIR}/Scripts/01_aggregate_user_base.py" >> "$LOGFILE" 2>&1; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ User base aggregation completed successfully" >> "$LOGFILE"
 else
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ ERROR: Aggregation failed with exit code $?" >> "$LOGFILE"

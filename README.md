@@ -17,15 +17,18 @@ CVAS_BEYOND_DATA/
 ├── requirements.txt               # Python dependencies
 │
 ├── Scripts/                        # Python and shell processing scripts
-│   ├── 01_convert_historical.py   # Historical data conversion (interactive)
+│   ├── 00_convert_historical.py   # Historical data conversion (interactive)
+│   ├── 01_aggregate_user_base.py  # User base aggregation script
 │   ├── 02_fetch_remote_nova_data.sh  # Unified remote data fetching script
 │   ├── 03_process_daily.py        # Daily incremental processing
 │   ├── 04_build_subscription_view.py  # Subscription aggregation
-│   ├── aggregate_user_base.py     # User base aggregation script
-│   ├── check_transactions_parquet_data.py  # Transaction data validation & performance testing
-│   ├── check_subscriptions_parquet_data.py # Subscription data validation & performance testing
-│   ├── check_users.py             # Interactive subscription query tool
-│   └── extract_music_subscriptions.py  # Music subscription extraction
+│   ├── others/                    # Unused/standalone scripts
+│   │   ├── check_transactions_parquet_data.py  # Transaction data validation
+│   │   ├── check_subscriptions_parquet_data.py # Subscription data validation
+│   │   ├── check_users.py         # Interactive subscription query tool
+│   │   └── extract_music_subscriptions.py  # Music subscription extraction
+│   └── utils/
+│       └── log_rotation.sh        # Log rotation utility (15-day retention)
 │
 ├── sql/                            # SQL queries
 │   └── build_subscription_view.sql  # Subscription aggregation query (230+ lines)
@@ -277,7 +280,7 @@ Enter Subscription ID: 10151796
 - Data files are excluded from Git (see `.gitignore`)
 - SSH key authentication required for remote data access (Scripts 1 & 2)
 - Cross-platform date handling (supports both macOS and Linux)
-- Historical data conversion (`01_convert_historical.py`) is interactive and prompts for data path
+- Historical data conversion (`00_convert_historical.py`) is interactive and prompts for data path
 - Validation scripts should be run regularly to ensure data quality
 - Query tool provides instant access to subscription details for troubleshooting
 
