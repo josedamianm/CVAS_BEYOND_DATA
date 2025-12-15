@@ -30,9 +30,11 @@ rotate_log() {
     awk -v cutoff="$CUTOFF_DATE" '
     {
         # Extract date from log line [YYYY-MM-DD HH:MM:SS]
-        match($0, /\[([0-9]{4}-[0-9]{2}-[0-9]{2})/, date_match)
-        if (date_match[1] >= cutoff) {
-            print $0
+        if (match($0, /\[([0-9]{4}-[0-9]{2}-[0-9]{2})/)) {
+            date_str = substr($0, RSTART+1, 10)
+            if (date_str >= cutoff) {
+                print $0
+            }
         }
     }' > "${LOGFILE}.tmp"
     
