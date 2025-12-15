@@ -9,21 +9,25 @@ LOGFILE="${SCRIPT_DIR}/Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log"
 # Source log rotation utility
 source "${SCRIPT_DIR}/Scripts/utils/log_rotation.sh"
 
-# Rotate log to keep only last 7 days
-rotate_log "$LOGFILE"
-
 # Ensure log directory exists
 mkdir -p "${SCRIPT_DIR}/Logs"
 
+# Rotate log to keep only last 15 days
+rotate_log "$LOGFILE"
+
 # Date to process (default to yesterday if not provided)
 if [ -z "$1" ]; then
-    yday=$(date -v-1d +%Y-%m-%d)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        yday=$(date -v-1d +%Y-%m-%d)
+    else
+        yday=$(date -d "yesterday" +%Y-%m-%d)
+    fi
 else
     yday="$1"
 fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] ========================================" >> "$LOGFILE"
-echo "Processing date: ${yday}" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Processing date: ${yday}" >> "$LOGFILE"
 
 # Validate that required daily data files exist
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Validating daily data files..." >> "$LOGFILE"
@@ -47,7 +51,7 @@ if [ ${#MISSING_FILES[@]} -gt 0 ]; then
     exit 1
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ All required data files present" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] All required data files present" >> "$LOGFILE"
 
 # 1. Process Daily Data
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting 03_process_daily.py for date: ${yday}..." >> "$LOGFILE"
@@ -64,7 +68,7 @@ if [ ! -d "${SCRIPT_DIR}/Parquet_Data/transactions/act" ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Parquet data directory not found" >> "$LOGFILE"
     exit 1
 fi
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Parquet data validated" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Parquet data validated" >> "$LOGFILE"
 
 # 2. Build Subscription View
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting 04_build_subscription_view.py..." >> "$LOGFILE"
@@ -74,3 +78,5 @@ else
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: 04_build_subscription_view.py failed with exit code $?" >> "$LOGFILE"
     exit 1
 fi
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ALL PROCESSING COMPLETED SUCCESSFULLY" >> "$LOGFILE"

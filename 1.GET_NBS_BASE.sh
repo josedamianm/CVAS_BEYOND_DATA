@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 ################################################
 ################################################
@@ -7,7 +7,7 @@
 ##                                            ##
 ##  Creator: Jose Manco                       ##
 ##  Reviewer: Jose Manco                      ##
-##  Last Modified: 2025-11-07                 ##
+##  Last Modified: 2025-12-15                 ##
 ##                                            ##
 ################################################
 ################################################
@@ -28,30 +28,36 @@ DEST_DIR="${SCRIPT_DIR}/User_Base/NBS_BASE"
 # Source log rotation utility
 source "${SCRIPT_DIR}/Scripts/utils/log_rotation.sh"
 
-# Rotate log to keep only last 7 days
+# Ensure log directory exists
+mkdir -p "${SCRIPT_DIR}/Logs"
+
+# Rotate log to keep only last 15 days
 rotate_log "$LOGFILE"
 
-if [ $# -eq 0 ]; then
-    # Default mode: download for yesterday
+# Date handling (cross-platform)
+if [[ "$OSTYPE" == "darwin"* ]]; then
     yday=$(date -v-1d +"%Y%m%d")
-    DEST_FILE="${DEST_DIR}/${yday}_NBS_Base.csv"
-    
-    # Download the file
-    if scp -i /Users/josemanco/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/Users/josemanco/.ssh/known_hosts -q -O omadmin@10.26.82.53:/opt/postgres/lvas_reports/NBS_Base.csv "$DEST_FILE" 2>>"$LOGFILE"; then
-        # Count lines in the downloaded file
-        if [ -f "$DEST_FILE" ]; then
-            LINE_COUNT=$(wc -l < "$DEST_FILE" | xargs)
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: Downloaded ${yday}_NBS_Base.csv - ${LINE_COUNT} lines" > "$LOGFILE"
-        else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: File not found after download" > "$LOGFILE"
-            exit 1
-        fi
+else
+    yday=$(date -d "yesterday" +"%Y%m%d")
+fi
+
+DEST_FILE="${DEST_DIR}/${yday}_NBS_Base.csv"
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ========================================" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting NBS Base download for date: ${yday}" >> "$LOGFILE"
+
+# Download the file
+if scp -i /Users/josemanco/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/Users/josemanco/.ssh/known_hosts -q -O omadmin@10.26.82.53:/opt/postgres/lvas_reports/NBS_Base.csv "$DEST_FILE" 2>>"$LOGFILE"; then
+    # Count lines in the downloaded file
+    if [ -f "$DEST_FILE" ]; then
+        LINE_COUNT=$(wc -l < "$DEST_FILE" | xargs)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: Downloaded ${yday}_NBS_Base.csv - ${LINE_COUNT} lines" >> "$LOGFILE"
     else
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Download failed for date ${yday}" > "$LOGFILE"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: File not found after download" >> "$LOGFILE"
         exit 1
     fi
 else
-    echo "Usage: $0 "
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Download failed for date ${yday}" >> "$LOGFILE"
     exit 1
 fi
 
@@ -73,9 +79,11 @@ sleep 2
 
 # Run aggregation script
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting user base aggregation..." >> "$LOGFILE"
-if python "${SCRIPT_DIR}/Scripts/aggregate_user_base.py" >> $LOGFILE 2>&1; then
+if /opt/anaconda3/bin/python "${SCRIPT_DIR}/Scripts/aggregate_user_base.py" >> "$LOGFILE" 2>&1; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: User base aggregation completed" >> "$LOGFILE"
 else
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: User base aggregation failed with exit code $?" >> "$LOGFILE"
+    exit 1
+fi
 
-
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ALL TASKS COMPLETED SUCCESSFULLY" >> "$LOGFILE"

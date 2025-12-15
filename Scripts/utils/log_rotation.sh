@@ -2,20 +2,20 @@
 
 # ==============================================================================
 # Log Rotation Helper
-# Keeps only the last 7 days of log entries in a log file
+# Keeps only the last 15 days of log entries in a log file
 # Usage: rotate_log <logfile>
 # ==============================================================================
 
 rotate_log() {
     local LOGFILE="$1"
-    local DAYS_TO_KEEP=7
+    local DAYS_TO_KEEP=15
     
     # Only rotate if log file exists and is not empty
     if [ ! -f "$LOGFILE" ] || [ ! -s "$LOGFILE" ]; then
         return 0
     fi
     
-    # Calculate cutoff date (7 days ago)
+    # Calculate cutoff date (15 days ago)
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         CUTOFF_DATE=$(date -v-${DAYS_TO_KEEP}d +%Y-%m-%d)
@@ -44,4 +44,21 @@ rotate_log() {
         : > "$LOGFILE"
         rm -f "${LOGFILE}.tmp"
     fi
+}
+
+# ==============================================================================
+# Cleanup old fetch_* logs (keeps last 15 days)
+# Usage: cleanup_fetch_logs <log_dir>
+# ==============================================================================
+
+cleanup_fetch_logs() {
+    local LOG_DIR="$1"
+    local DAYS_TO_KEEP=15
+    
+    if [ ! -d "$LOG_DIR" ]; then
+        return 0
+    fi
+    
+    # Find and delete fetch_* logs older than 15 days
+    find "$LOG_DIR" -name "fetch_*.log" -type f -mtime +${DAYS_TO_KEEP} -delete 2>/dev/null
 }

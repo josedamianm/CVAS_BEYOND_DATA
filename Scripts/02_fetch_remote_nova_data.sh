@@ -85,10 +85,6 @@ fi
 # Loop through types (if 'all' was selected, this runs for each; otherwise just once)
 for CURRENT_TYPE in "${TYPES[@]}"; do
 
-    LOG_FILE="${LOG_DIR}/fetch_${CURRENT_TYPE}_${START_DATE}.log"
-    # Append to log, but also show on stdout
-    exec > >(tee -a ${LOG_FILE}) 2>&1
-
     echo "[$(date)] Starting fetch for TYPE: $CURRENT_TYPE"
 
     # ------------------------------------------------------------------------------

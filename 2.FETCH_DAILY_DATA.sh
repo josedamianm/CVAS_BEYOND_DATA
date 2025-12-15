@@ -1,43 +1,54 @@
 #!/bin/bash
 
-# ==============================================================================
-# 2.FETCH_DAILY_DATA.sh
-# Orchestrates the fetching of all daily data types.
-# ==============================================================================
-
 # Configuration
+# Get script directory and use relative paths
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-FETCH_SCRIPT="${SCRIPT_DIR}/Scripts/02_fetch_remote_nova_data.sh"
-LOG_FILE="${SCRIPT_DIR}/Logs/2.FETCH_DAILY_DATA.log"
+SCRIPTS_DIR="${SCRIPT_DIR}/Scripts"
+LOGFILE="${SCRIPT_DIR}/Logs/2.FETCH_DAILY_DATA.log"
 
 # Source log rotation utility
 source "${SCRIPT_DIR}/Scripts/utils/log_rotation.sh"
 
-# Rotate log to keep only last 7 days
-rotate_log "$LOG_FILE"
-
-# Start logging
+# Ensure log directory exists
 mkdir -p "${SCRIPT_DIR}/Logs"
-exec > >(tee -a ${LOG_FILE}) 2>&1
 
-echo "[$(date)] ========================================"
-echo "[$(date)] STARTING DAILY DATA FETCH"
-echo "[$(date)] ========================================"
+# Rotate log to keep only last 15 days
+rotate_log "$LOGFILE"
 
-# Make sure fetch script is executable
-chmod +x "$FETCH_SCRIPT"
+# Cleanup old fetch_* logs (legacy cleanup)
+cleanup_fetch_logs "${SCRIPT_DIR}/Logs"
 
-# Run fetch for all types
-echo "[$(date)] Fetching all transaction types..."
-"$FETCH_SCRIPT" "all"
-
-if [ $? -ne 0 ]; then
-    echo "[$(date)] ❌ ERROR: Failed to fetch data."
-    exit 1
+# Date to fetch (default to yesterday if not provided)
+if [ -z "$1" ]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        yday=$(date -v-1d +%Y-%m-%d)
+    else
+        yday=$(date -d "yesterday" +%Y-%m-%d)
+    fi
 else
-    echo "[$(date)] ✓ SUCCESS: All data fetched."
+    yday="$1"
 fi
 
-echo "[$(date)] ========================================"
-echo "[$(date)] DAILY DATA FETCH COMPLETED"
-echo "[$(date)] ========================================"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] ========================================" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting daily data fetch for date: ${yday}" >> "$LOGFILE"
+
+# Fetch all transaction types
+TYPES=("act" "reno" "dct" "ppd" "cnr" "rfnd")
+FAILED_TYPES=()
+
+for type in "${TYPES[@]}"; do
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Fetching ${type}..." >> "$LOGFILE"
+    if "${SCRIPTS_DIR}/02_fetch_remote_nova_data.sh" "${type}" "${yday}" >> "$LOGFILE" 2>&1; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: ${type} fetch completed" >> "$LOGFILE"
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: ${type} fetch failed" >> "$LOGFILE"
+        FAILED_TYPES+=("${type}")
+    fi
+done
+
+if [ ${#FAILED_TYPES[@]} -gt 0 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] COMPLETED WITH ERRORS - Failed types: ${FAILED_TYPES[*]}" >> "$LOGFILE"
+    exit 1
+else
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ALL FETCHES COMPLETED SUCCESSFULLY" >> "$LOGFILE"
+fi
