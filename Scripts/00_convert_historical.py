@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime
 import sys
 import pyarrow.parquet as pq
+import shutil
 
 def convert_historical_csvs():
     """
@@ -159,14 +160,25 @@ def convert_historical_csvs():
                     ignore_errors=False
                 )
                 
-                # Parse date columns
+                # Parse date columns with flexible format handling
                 date_cols = [col for col in df.columns if 'date' in col.lower()]
                 for date_col in date_cols:
+                    # Try parsing with datetime format first, then date-only format
                     df = df.with_columns([
-                        pl.col(date_col).str.strptime(
-                            pl.Datetime, 
-                            format='%Y-%m-%d %H:%M:%S',
-                            strict=False
+                        pl.when(pl.col(date_col).str.contains(' '))
+                        .then(
+                            pl.col(date_col).str.strptime(
+                                pl.Datetime,
+                                format='%Y-%m-%d %H:%M:%S',
+                                strict=False
+                            )
+                        )
+                        .otherwise(
+                            pl.col(date_col).str.strptime(
+                                pl.Datetime,
+                                format='%Y-%m-%d',
+                                strict=False
+                            )
                         ).alias(date_col)
                     ])
                 
@@ -215,12 +227,16 @@ def convert_historical_csvs():
         combined_df = combined_df.unique(subset=unique_cols, keep='last')
         duplicates_removed = original_count - len(combined_df)
         print(f"✓ Removed {duplicates_removed:,} duplicates")
-        
+
         # Write to partitioned Parquet using PyArrow
         output_path = parquet_path / file_key
         print(f"  Writing to Parquet: {output_path}...", end=' ')
-        
+
         try:
+            # Remove existing output directory to avoid duplicates
+            if output_path.exists():
+                shutil.rmtree(output_path)
+
             # Convert to Arrow table
             arrow_table = combined_df.to_arrow()
             

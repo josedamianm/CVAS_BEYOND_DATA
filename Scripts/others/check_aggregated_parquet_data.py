@@ -35,52 +35,65 @@ def check_subscriptions_parquet_data():
     print("=" * 80)
     
     yesterday = (datetime.now() - timedelta(days=1)).date()
-    
+
     try:
         df = pl.read_parquet(str(parquet_file))
-        
+
+        # First, get the earliest renewal date to use as reference for activation validation
+        renewal_df = df.filter(pl.col('last_renewal_date').is_not_null()).select(pl.col('last_renewal_date').cast(pl.Date).alias('date'))
+        transactions_start_date = min(renewal_df['date'].to_list()) if renewal_df.height > 0 else None
+
         date_checks = {
             'ACTIVATION': 'activation_date',
             'LAST RENEWAL': 'last_renewal_date',
             'DEACTIVATION': 'deactivation_date',
             'CANCELLATION': 'cancellation_date'
         }
-        
+
         for check_name, date_col in date_checks.items():
             print(f"\n{check_name}:")
             print("-" * 40)
-            
+
             if date_col not in df.columns:
                 print(f"⚠️  Column '{date_col}' not found")
                 continue
-            
+
             date_df = df.filter(pl.col(date_col).is_not_null()).select(pl.col(date_col).cast(pl.Date).alias('date'))
-            
+
             if date_df.height == 0:
                 print("❌ No records found")
                 continue
-            
+
             available_dates = set(date_df['date'].to_list())
             min_date = min(available_dates)
             max_date = max(available_dates)
-            
-            print(f"First date: {min_date}")
-            print(f"Last date: {max_date}")
+
+            # For activation, use transactions_start_date as the validation start point
+            validation_start_date = min_date
+            if check_name == 'ACTIVATION' and transactions_start_date:
+                validation_start_date = max(min_date, transactions_start_date)
+                print(f"First activation date: {min_date}")
+                print(f"Last activation date: {max_date}")
+                print(f"Validating from: {validation_start_date} (transactions start date)")
+            else:
+                print(f"First date: {min_date}")
+                print(f"Last date: {max_date}")
+
             print(f"Checking until: {yesterday}")
             print()
-            
-            if min_date > yesterday:
-                print(f"⚠️  Earliest date {min_date} is after {yesterday}")
+
+            if validation_start_date > yesterday:
+                print(f"⚠️  Earliest date {validation_start_date} is after {yesterday}")
                 continue
-            
-            current_date = min_date
+
+            current_date = validation_start_date
             missing_dates = []
-            
+
             while current_date <= yesterday:
                 if current_date not in available_dates:
                     missing_dates.append(current_date)
                 current_date += timedelta(days=1)
-            
+
             if missing_dates:
                 print(f"❌ Found {len(missing_dates)} missing day(s):")
                 for missing_date in missing_dates[:50]:
@@ -88,8 +101,8 @@ def check_subscriptions_parquet_data():
                 if len(missing_dates) > 50:
                     print(f"   ... and {len(missing_dates) - 50} more")
             else:
-                print(f"✓ All days from {min_date} to {yesterday} have data")
-    
+                print(f"✓ All days from {validation_start_date} to {yesterday} have data")
+
     except Exception as e:
         print(f"❌ Error: {str(e)}")
     
