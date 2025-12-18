@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 
-SCRIPT_DIR = Path(__file__).parent.parent
+SCRIPT_DIR = Path(__file__).parent.parent.parent
 PARQUET_FILE = SCRIPT_DIR / "Parquet_Data" / "aggregated" / "subscriptions.parquet"
 
 
