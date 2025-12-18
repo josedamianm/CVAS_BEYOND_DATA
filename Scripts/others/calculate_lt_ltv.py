@@ -16,22 +16,23 @@ def load_service_cpcs(service_name):
 
     df = pl.read_csv(MASTERCPC_FILE)
 
-    service_row = df.filter(
+    service_rows = df.filter(
         pl.col("Service Name").str.to_lowercase() == service_name.lower()
     )
 
-    if service_row.height == 0:
+    if service_rows.height == 0:
         print(f"❌ Error: Service '{service_name}' not found in MASTERCPC.csv")
         return None
 
-    if service_row.height > 1:
-        print(f"⚠️  Warning: Multiple entries found for '{service_name}'. Using the first one.")
+    all_cpcs = set()
 
-    cpcs_str = service_row.select("CPCs").item(0, 0)
+    for cpcs_str in service_rows.select("CPCs").to_series():
+        cpcs_str = cpcs_str.strip("{}")
+        cpcs = [int(cpc.strip()) for cpc in cpcs_str.split(",") if cpc.strip()]
+        all_cpcs.update(cpcs)
 
-    cpcs_str = cpcs_str.strip("{}")
-    cpc_list = [int(cpc.strip()) for cpc in cpcs_str.split(",") if cpc.strip()]
-    
+    cpc_list = sorted(list(all_cpcs))
+
     return cpc_list
 
 
