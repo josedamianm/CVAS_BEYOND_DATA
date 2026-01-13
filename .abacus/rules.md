@@ -722,9 +722,39 @@ tail -f Logs/1.GET_NBS_BASE.log
 python Scripts/others/check_transactions_parquet_data.py
 python Scripts/others/check_subscriptions_parquet_data.py
 
+# Query transaction data by MSISDN or TMUSERID
+python Scripts/others/query_msisdn_from_tx.py 34686516147
+python Scripts/others/query_tmuserid_from_tx.py 12345678
+
 # Check Parquet schema
 python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Parquet_Data/aggregated/subscriptions.parquet'))"
 ```
+
+### Query Scripts
+
+**`Scripts/others/query_msisdn_from_tx.py`**
+- Queries transaction data by MSISDN (automatically adds '34' country code if missing)
+- Shows MSISDN → TMUSERID(s) mapping
+- Displays full subscription lifecycle grouped by `subscription_id`:
+  - ACT, RENO, DCT, CNR, RFND transactions (sorted by trans_date, trans_type_id)
+  - Summary: counts per transaction type, total revenue, total refunded
+- Separately shows PPD (Pay Per Download) one-time purchases
+- Usage: `python Scripts/others/query_msisdn_from_tx.py <msisdn>`
+
+**`Scripts/others/query_tmuserid_from_tx.py`**
+- Queries transaction data by TMUSERID
+- Shows TMUSERID → MSISDN(s) mapping
+- Displays full subscription lifecycle grouped by `subscription_id`:
+  - ACT, RENO, DCT, CNR, RFND transactions (sorted by trans_date, trans_type_id)
+  - Summary: counts per transaction type, total revenue, total refunded
+- Separately shows PPD (Pay Per Download) one-time purchases
+- Usage: `python Scripts/others/query_tmuserid_from_tx.py <tmuserid>`
+
+**Query Logic:**
+1. Step 1: Find all `subscription_id`s associated with the identifier (from ACT, RENO, DCT)
+2. Step 2: Retrieve all transactions (ACT, RENO, DCT, CNR, RFND) for those subscription_ids
+3. Step 3: Query PPD transactions directly by the original identifier
+4. Note: CNR and RFND don't have `trans_type_id` in source schema; assigned 99 and 100 for sorting
 
 ---
 
@@ -743,5 +773,5 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Parquet_Data/agg
 
 ---
 
-**Last Updated:** 2024  
+**Last Updated:** 2025-01-27
 **For General Documentation:** See `README.md`
