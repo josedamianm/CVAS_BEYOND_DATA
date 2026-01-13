@@ -184,6 +184,7 @@ def aggregate_by_service(
 ) -> tuple[pl.DataFrame, list[int]]:
     """
     Aggregate CPC counters by Service Name.
+    Excludes services containing 'nubico' (case-insensitive).
 
     Returns:
         - Aggregated DataFrame
@@ -225,6 +226,10 @@ def aggregate_by_service(
         pl.col('service_name').fill_null('UNKNOWN'),
         pl.col('tme_category').fill_null('')
     ])
+
+    joined = joined.filter(
+        ~pl.col('service_name').str.to_lowercase().str.contains('nubico')
+    )
 
     aggregated = joined.group_by(['date', 'service_name', 'tme_category']).agg([
         pl.col('cpc').unique().sort().alias('cpcs'),
@@ -368,21 +373,25 @@ def main():
         if all_tx_dates:
             print(f"  Date range: {all_tx_dates[0]} to {all_tx_dates[-1]}")
 
-        missing_dates = get_missing_dates(parquet_base, counters_cpc_path)
-
-        if not missing_dates:
-            print("\n✓ All transaction dates already processed in counters!")
-            print("  Use --force to recompute existing dates.")
-            return
-
-        print(f"\n  Missing dates in counters: {len(missing_dates)}")
-        if len(missing_dates) <= 10:
-            print(f"  Dates: {missing_dates}")
+        if args.force:
+            print(f"\n⚠️  FORCE MODE: Reprocessing ALL {len(all_tx_dates)} dates")
+            dates = all_tx_dates
         else:
-            print(f"  First 5: {missing_dates[:5]}")
-            print(f"  Last 5: {missing_dates[-5:]}")
+            missing_dates = get_missing_dates(parquet_base, counters_cpc_path)
 
-        dates = missing_dates
+            if not missing_dates:
+                print("\n✓ All transaction dates already processed in counters!")
+                print("  Use --force to recompute existing dates.")
+                return
+
+            print(f"\n  Missing dates in counters: {len(missing_dates)}")
+            if len(missing_dates) <= 10:
+                print(f"  Dates: {missing_dates}")
+            else:
+                print(f"  First 5: {missing_dates[:5]}")
+                print(f"  Last 5: {missing_dates[-5:]}")
+
+            dates = missing_dates
         mode = "backfill"
     else:
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
