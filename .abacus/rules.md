@@ -11,21 +11,23 @@
 **RULE:** Scripts MUST execute in strict order. Each depends on the previous completing successfully.
 
 ```
-1.GET_NBS_BASE.sh (8:05 AM) → 2.FETCH_DAILY_DATA.sh (8:25 AM) → 3.PROCESS_DAILY_AND_BUILD_VIEW.sh (11:30 AM)
+1.GET_NBS_BASE.sh (8:05 AM) → 2.FETCH_DAILY_DATA.sh (8:25 AM) → 3.PROCESS_DAILY_AND_BUILD_VIEW.sh (11:30 AM) → 4.BUILD_TRANSACTION_COUNTERS.sh (12:00 PM)
 ```
 
-**Why:** Script 2 needs yesterday's data. Script 3 needs all 6 transaction CSV files from Script 2.
+**Why:** Script 2 needs yesterday's data. Script 3 needs all 6 transaction CSV files from Script 2. Script 4 needs aggregated subscription data from Script 3.
 
 **DO NOT:**
 - ❌ Make scripts independent
 - ❌ Add parallel execution
 - ❌ Remove dependency validation
 - ❌ Change execution order
+- ❌ Run Script 4 before Script 3 completes
 
 **DO:**
 - ✅ Validate previous stage completed before starting
 - ✅ Log dependencies clearly
 - ✅ Exit with error if prerequisites missing
+- ✅ Verify aggregated subscription Parquet exists before building counters
 
 ---
 
@@ -58,32 +60,40 @@ ACT, RENO, DCT, CNR, RFND, PPD
 ```
 CVAS_BEYOND_DATA/
 ├── 1.GET_NBS_BASE.sh
-├── 2.FETCH_DAILY_DATA.sh  
+├── 2.FETCH_DAILY_DATA.sh
 ├── 3.PROCESS_DAILY_AND_BUILD_VIEW.sh
+├── 4.BUILD_TRANSACTION_COUNTERS.sh
 ├── Scripts/
 │   ├── 01_aggregate_user_base.py
 │   ├── 02_fetch_remote_nova_data.sh
 │   ├── 03_process_daily.py
 │   ├── 04_build_subscription_view.py
-│   ├── utils/log_rotation.sh
+│   ├── 05_build_counters.py
+│   ├── utils/
+│   │   ├── log_rotation.sh
+│   │   └── counter_utils.py
 │   └── others/ (validation scripts)
 ├── sql/build_subscription_view.sql
 ├── Daily_Data/ (gitignored)
 ├── Parquet_Data/ (gitignored)
 ├── User_Base/ (gitignored)
+├── Counters/ (gitignored)
 └── Logs/ (gitignored)
 ```
 
 **DO NOT:**
-- ❌ Move orchestration scripts (1, 2, 3) out of root
+- ❌ Move orchestration scripts (1, 2, 3, 4) out of root
 - ❌ Rename the `Scripts/` directory
 - ❌ Change Parquet storage structure
 - ❌ Reorganize folder hierarchy
+- ❌ Move counter utilities out of `Scripts/utils/`
 
 **DO:**
 - ✅ Use relative paths: `Scripts/01_aggregate_user_base.py`
 - ✅ Keep new validation scripts in `Scripts/others/`
 - ✅ Maintain Hive partitioning structure in Parquet_Data
+- ✅ Store counter data in `Counters/` directory
+- ✅ Keep counter utilities in `Scripts/utils/counter_utils.py`
 
 ---
 
@@ -157,7 +167,67 @@ CVAS_BEYOND_DATA/
 
 ---
 
-### 5. Hive Partitioning (REQUIRED FOR PERFORMANCE)
+### 5. Transaction Counter System (INDEPENDENT PIPELINE)
+
+**RULE:** Counter system runs independently from main pipeline. It aggregates transaction counts by CPC and Service.
+
+**Purpose:** Generate daily transaction counters for analytics and reporting.
+
+**Key Components:**
+- `4.BUILD_TRANSACTION_COUNTERS.sh` - Orchestration script
+- `Scripts/05_build_counters.py` - Counter aggregation logic
+- `Scripts/utils/counter_utils.py` - Reusable counter utilities
+- `Counters/Counters_CPC.parquet` - CPC-level counters (historical)
+- `Counters/Counters_Service.csv` - Service-level counters (historical)
+
+**Counter Schemas:**
+
+#### Counters_CPC.parquet (13 columns):
+```python
+{
+    'date': pl.Date,
+    'cpc': pl.Int64,
+    'act_count': pl.Int64,      # Total activations
+    'act_free': pl.Int64,       # Free activations (rev=0)
+    'act_pay': pl.Int64,        # Paid activations (rev>0)
+    'reno_count': pl.Int64,
+    'dct_count': pl.Int64,
+    'cnr_count': pl.Int64,
+    'ppd_count': pl.Int64,
+    'rfnd_count': pl.Int64,
+    'rfnd_amount': pl.Float64,  # Total refund amount
+    'rev': pl.Float64,          # Total revenue
+    'last_updated': pl.Datetime
+}
+```
+
+#### Counters_Service.csv (14 columns):
+```
+date, service_name, tme_category, cpcs, act_count, act_free, act_pay,
+reno_count, dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
+```
+
+**Execution Modes:**
+- **Daily mode** (default): Processes yesterday's data
+- **Backfill mode** (`--backfill`): Processes all missing dates from transaction data
+- **Force mode** (`--force`): Recomputes existing dates
+
+**DO NOT:**
+- ❌ Run counter system before transaction data is processed
+- ❌ Modify counter schemas without updating both CPC and Service outputs
+- ❌ Remove backward compatibility for existing counter files
+- ❌ Change column order (breaks downstream analytics)
+
+**DO:**
+- ✅ Run counter system after `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` completes
+- ✅ Use `--backfill --force` for initial historical load
+- ✅ Maintain idempotent updates (same date can be reprocessed)
+- ✅ Keep counter utilities in `Scripts/utils/counter_utils.py`
+- ✅ Round monetary values (`rev`, `rfnd_amount`) to 2 decimals
+
+---
+
+### 6. Hive Partitioning (REQUIRED FOR PERFORMANCE)
 
 **RULE:** All transaction Parquet files MUST use Hive partitioning by `year_month=YYYY-MM`.
 
@@ -709,6 +779,8 @@ WHERE trans_date >= '2025-01-01'
 | `Scripts/01_aggregate_user_base.py` | User base aggregation | Lines 27-53 (category mapping) |
 | `Scripts/03_process_daily.py` | CSV→Parquet processor | Schema definitions, Hive partitioning logic |
 | `Scripts/04_build_subscription_view.py` | Subscription aggregator | SQL template replacement |
+| `Scripts/05_build_counters.py` | Counter aggregator | Counter calculation logic, Parquet write |
+| `Scripts/utils/counter_utils.py` | Counter utilities | Helper functions for counter operations |
 
 ### Remote Server Details
 
@@ -740,6 +812,7 @@ Project: /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 bash 1.GET_NBS_BASE.sh
 bash 2.FETCH_DAILY_DATA.sh 2025-01-15
 bash 3.PROCESS_DAILY_AND_BUILD_VIEW.sh 2025-01-15
+bash 4.BUILD_TRANSACTION_COUNTERS.sh 2025-01-15
 
 # Test launchd execution
 launchctl start com.josemanco.nbs_base
@@ -755,6 +828,9 @@ python Scripts/others/query_tmuserid_from_tx.py 12345678
 
 # Check Parquet schema
 python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Parquet_Data/aggregated/subscriptions.parquet'))"
+
+# Check counter data
+python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transaction_counters.parquet'))"
 ```
 
 ### Query Scripts
@@ -795,10 +871,12 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Parquet_Data/agg
 | `1.GET_NBS_BASE.sh` | ✅ PASS | Log rotation ✓, Absolute Python path ✓, Error handling ✓, Cross-platform date ✓ |
 | `2.FETCH_DAILY_DATA.sh` | ✅ PASS | Log rotation ✓, Sequential execution ✓, Cross-platform date ✓ |
 | `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | ✅ PASS | Log rotation ✓, Absolute Python path ✓, Error handling ✓, Cross-platform date ✓ |
+| `4.BUILD_TRANSACTION_COUNTERS.sh` | ✅ PASS | Log rotation ✓, Absolute Python path ✓, Error handling ✓, Cross-platform date ✓, Independent execution ✓ |
 | `Scripts/01_aggregate_user_base.py` | ✅ PASS | Category mapping ✓, Service exclusions ✓, No PII logging ✓ |
 | `Scripts/02_fetch_remote_nova_data.sh` | ✅ PASS | Cross-platform date ✓, SSH connection ✓ |
 | `Scripts/03_process_daily.py` | ✅ PASS | All 6 transaction types ✓, Hive partitioning ✓, Schema enforcement ✓ |
 | `Scripts/04_build_subscription_view.py` | ✅ PASS | DuckDB aggregation ✓, SQL template ✓ |
+| `Scripts/05_build_counters.py` | ✅ PASS | Counter aggregation ✓, Idempotent updates ✓, Backfill support ✓, Schema enforcement ✓ |
 
 #### 2. SQL Queries
 | File | Status | Validation |
@@ -809,6 +887,7 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Parquet_Data/agg
 | Script | Status | Validation |
 |--------|--------|------------|
 | `Scripts/utils/log_rotation.sh` | ✅ PASS | 15-day retention ✓, Cross-platform date ✓ |
+| `Scripts/utils/counter_utils.py` | ✅ PASS | MASTERCPC parsing ✓, Atomic writes ✓, Schema validation ✓ |
 
 #### 4. Query & Validation Scripts (Scripts/others/)
 | Script | Status | Validation |

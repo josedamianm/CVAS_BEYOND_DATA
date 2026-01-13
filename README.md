@@ -20,8 +20,9 @@
 **CVAS Beyond Data** is a production-grade ETL (Extract, Transform, Load) pipeline designed for telecommunications subscription data processing and analytics. It automates the daily collection of 6 transaction types (ACT, RENO, DCT, CNR, RFND, PPD) from remote PostgreSQL servers, transforms them into optimized Parquet columnar format, and builds comprehensive lifecycle views for business analytics.
 
 ### Key Features
-- **Automated Daily Execution**: Runs via macOS launchd scheduler (3 sequential jobs).
+- **Automated Daily Execution**: Runs via macOS launchd scheduler (3 sequential jobs + 1 independent counter job).
 - **Sequential Pipeline**: Strict 3-stage orchestration ensuring data consistency (1.UserBase → 2.Fetch → 3.Process).
+- **Transaction Counters**: Independent counter system aggregating transaction metrics by CPC and Service.
 - **Columnar Storage**: Parquet format with Hive partitioning (`year_month=YYYY-MM`) for efficient querying.
 - **User Base Tracking**: Aggregates 1100+ daily snapshots of user base data.
 - **Secure Handling**: SSH/SCP data transfer with strict PII log masking.
@@ -31,7 +32,7 @@
 
 ## Architecture Overview
 
-### Three-Stage Pipeline
+### Four-Stage Pipeline
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
@@ -82,6 +83,24 @@
 │    → Build comprehensive subscription lifecycle view          │
 │    → Save to Parquet_Data/aggregated/subscriptions.parquet    │
 └────────────────────────────────────────────────────────────────┘
+                              ↓
+┌────────────────────────────────────────────────────────────────┐
+│ STAGE 4: TRANSACTION COUNTERS (Independent)                    │
+│ Script: 4.BUILD_TRANSACTION_COUNTERS.sh                        │
+├────────────────────────────────────────────────────────────────┤
+│ Execute: Scripts/05_build_counters.py                         │
+│    → Load transaction Parquet files                           │
+│    → Aggregate counts by CPC and Service                      │
+│    → Calculate revenue and refund metrics                     │
+│    → Split activations (free vs paid)                         │
+│    → Save to Counters/Counters_CPC.parquet                    │
+│    → Save to Counters/Counters_Service.csv                    │
+│                                                                │
+│ Modes:                                                        │
+│ • Daily: Process yesterday's data (default)                  │
+│ • Backfill: Process all missing dates                        │
+│ • Force: Recompute existing dates                            │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ### Data Flow Diagram
@@ -95,6 +114,14 @@ NBS Server ──SCP──> User_Base/NBS_BASE ──Python──> user_base_by_
                                                     DuckDB Aggregation
                                                                   ↓
                                               subscriptions.parquet (Final View)
+                                                                  │
+                                                                  ↓
+                                            Counter Aggregation (Independent)
+                                                                  ↓
+                                    ┌───────────────────────────────────────┐
+                                    │  Counters_CPC.parquet                 │
+                                    │  Counters_Service.csv                 │
+                                    └───────────────────────────────────────┘
 ```
 
 ---
@@ -439,6 +466,45 @@ bash Scripts/02_fetch_remote_nova_data.sh ACT 2024-01-15
 # Build subscription view
 /opt/anaconda3/bin/python Scripts/04_build_subscription_view.py
 ```
+
+### Run Transaction Counters
+
+The counter system runs independently from the main pipeline and aggregates transaction counts by CPC and Service.
+
+```bash
+# Daily mode (default): Process yesterday's data
+bash 4.BUILD_TRANSACTION_COUNTERS.sh
+
+# Process specific date
+bash 4.BUILD_TRANSACTION_COUNTERS.sh 2024-01-15
+
+# Backfill mode: Process all missing dates from transaction data
+bash 4.BUILD_TRANSACTION_COUNTERS.sh --backfill
+
+# Force recompute existing dates
+bash 4.BUILD_TRANSACTION_COUNTERS.sh 2024-01-15 --force
+
+# Initial historical load (backfill + force)
+bash 4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force
+
+# Direct Python execution
+/opt/anaconda3/bin/python Scripts/05_build_counters.py 2024-01-15
+/opt/anaconda3/bin/python Scripts/05_build_counters.py --backfill
+```
+
+**Output Files:**
+- `Counters/Counters_CPC.parquet` - CPC-level counters (historical, 13 columns)
+- `Counters/Counters_Service.csv` - Service-level counters (historical, 14 columns)
+
+**Counter Columns:**
+- Transaction counts: `act_count`, `act_free`, `act_pay`, `reno_count`, `dct_count`, `cnr_count`, `ppd_count`, `rfnd_count`
+- Financial metrics: `rfnd_amount`, `rev` (total revenue)
+- Metadata: `date`, `cpc`/`service_name`, `last_updated`
+
+**Execution Modes:**
+- **Daily mode**: Processes yesterday's data (default)
+- **Backfill mode**: Auto-discovers and processes all missing dates
+- **Force mode**: Recomputes existing dates (idempotent updates)
 
 ### Data Querying Tools
 
