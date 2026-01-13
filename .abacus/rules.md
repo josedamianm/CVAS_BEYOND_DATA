@@ -11,10 +11,10 @@
 **RULE:** Scripts MUST execute in strict order. Each depends on the previous completing successfully.
 
 ```
-1.GET_NBS_BASE.sh (8:05 AM) → 2.FETCH_DAILY_DATA.sh (8:25 AM) → 3.PROCESS_DAILY_AND_BUILD_VIEW.sh (11:30 AM) → 4.BUILD_TRANSACTION_COUNTERS.sh (12:00 PM)
+1.GET_NBS_BASE.sh (8:05 AM) → 2.FETCH_DAILY_DATA.sh (8:25 AM) → 3.PROCESS_DAILY_AND_BUILD_VIEW.sh (8:30 AM) → 4.BUILD_TRANSACTION_COUNTERS.sh (9:30 AM)
 ```
 
-**Why:** Script 2 needs yesterday's data. Script 3 needs all 6 transaction CSV files from Script 2. Script 4 needs aggregated subscription data from Script 3.
+**Why:** Script 2 needs yesterday's data. Script 3 needs all 6 transaction CSV files from Script 2. Script 4 needs Parquet transaction data from Script 3.
 
 **DO NOT:**
 - ❌ Make scripts independent
@@ -217,6 +217,7 @@ reno_count, dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
 - ❌ Modify counter schemas without updating both CPC and Service outputs
 - ❌ Remove backward compatibility for existing counter files
 - ❌ Change column order (breaks downstream analytics)
+- ❌ Include Nubico services in counter aggregations
 
 **DO:**
 - ✅ Run counter system after `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` completes
@@ -224,6 +225,8 @@ reno_count, dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
 - ✅ Maintain idempotent updates (same date can be reprocessed)
 - ✅ Keep counter utilities in `Scripts/utils/counter_utils.py`
 - ✅ Round monetary values (`rev`, `rfnd_amount`) to 2 decimals
+- ✅ Filter out services containing "nubico" (case-insensitive) in service aggregation
+- ✅ Handle duplicate dates gracefully (merge_counters removes existing date before adding new)
 
 ---
 
@@ -950,9 +953,32 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
 - ✅ Consistent column names and types
 - ✅ Schema validation in check scripts
 
-### 📝 Recent Changes (2025-01-27)
+### 📝 Recent Changes (2026-01-13)
 
-1. **New Query Scripts:**
+1. **Transaction Counter System Enhancements:**
+   - Added Nubico service filtering in `Scripts/05_build_counters.py:aggregate_by_service()`
+   - Services containing "nubico" (case-insensitive) are now excluded from counter aggregations
+   - Implemented `--force` flag support in backfill mode for reprocessing existing dates
+   - Confirmed idempotent duplicate handling (merge_counters removes existing date before adding new)
+   - Added `act_free` and `act_pay` columns to split activations by revenue (rev=0 vs rev>0)
+   - Added `rev` (total revenue) and `rfnd_amount` (total refund amount) columns
+   - All monetary values rounded to 2 decimals
+   - Backfill successfully reprocessed 743 dates with Nubico filter applied
+
+2. **Documentation Updates:**
+   - Updated `README.md` with complete Stage 4 counter system documentation
+   - Added counter schemas to Data Schema section (13 columns for CPC, 14 for Service)
+   - Updated Directory Structure, File Descriptions, Pipeline Workflow, Scheduled Automation
+   - Added counter validation commands to Troubleshooting section
+   - Updated `.abacus/rules.md` with Nubico filtering and duplicate handling rules
+   - Fixed execution times: Stage 3 (8:30 AM), Stage 4 (9:30 AM)
+
+3. **Launchd Configuration:**
+   - Created `com.josemanco.build_counters.plist` for Stage 4 automation
+   - Scheduled to run daily at 9:30 AM
+   - Successfully loaded and verified with `launchctl list`
+
+4. **Previous Changes (2025-01-27):**
    - Added `Scripts/others/query_msisdn_from_tx.py` - Query subscription lifecycle by MSISDN
    - Added `Scripts/others/query_tmuserid_from_tx.py` - Query subscription lifecycle by TMUSERID
    - Both scripts show identifier mapping (MSISDN↔TMUSERID)
@@ -960,16 +986,11 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
    - Separate PPD (Pay Per Download) transactions
    - Automatic country code handling for MSISDN (adds '34' if missing)
 
-2. **Documentation Updates:**
-   - Updated `.abacus/rules.md` with query scripts documentation
-   - Clarified PII protection exceptions for manual query/debugging scripts
-   - Added comprehensive validation summary
-
 ### 🎯 Compliance Status
 
 | Rule Category | Status | Notes |
 |---------------|--------|-------|
-| Sequential Pipeline | ✅ COMPLIANT | 1→2→3 order enforced |
+| Sequential Pipeline | ✅ COMPLIANT | 1→2→3→4 order enforced (4 is independent) |
 | Six Transaction Types | ✅ COMPLIANT | All 6 types consistently processed |
 | Directory Structure | ✅ COMPLIANT | Immutable structure maintained |
 | Schema Enforcement | ✅ COMPLIANT | Strict schemas in all processors |
@@ -985,23 +1006,45 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
 | NBS_BASE Immutability | ✅ COMPLIANT | Historical files untouched |
 | PII Protection | ✅ COMPLIANT | No PII in pipeline logs, allowed in manual query scripts |
 | Git Ignore | ✅ COMPLIANT | Data directories excluded |
+| Counter System | ✅ COMPLIANT | Nubico filtering ✓, Idempotent updates ✓, Force mode ✓ |
 
 ---
 
 ## 🎯 TL;DR - MOST IMPORTANT RULES
 
-1. **Sequential Execution:** Never break 1→2→3 script order
+1. **Sequential Execution:** Never break 1→2→3→4 script order (4 is independent)
 2. **Six Transaction Types:** Always process all 6 (ACT, RENO, DCT, CNR, RFND, PPD)
 3. **Strict Schemas:** Schema changes break everything. Enforce in Polars.
 4. **Hive Partitioning:** Required for DuckDB performance. Never remove.
 5. **Absolute Python Path:** Use `/opt/anaconda3/bin/python` in shell scripts
 6. **No PII in Pipeline Logs:** Never log `tmuserid` or `msisdn` in automated processes (allowed in manual query scripts)
 7. **15-Day Log Retention:** Always call `rotate_log()` at start
-8. **Git Ignore Data:** Never commit `Daily_Data/`, `Parquet_Data/`, `Logs/`
+8. **Git Ignore Data:** Never commit `Daily_Data/`, `Parquet_Data/`, `Counters/`, `Logs/`
 9. **Edge Cases:** Handle missing ACT records and CPC upgrades
 10. **Cross-Platform:** Support both macOS and Linux date commands
+11. **Counter System:** Filter Nubico services, maintain idempotent updates, support force mode
 
 ---
 
-**Last Updated:** 2025-01-27
+**Last Updated:** 2026-01-13
 **For General Documentation:** See `README.md`
+
+| Rule Category | Status | Notes |
+|---------------|--------|-------|
+| Sequential Pipeline | ✅ COMPLIANT | 1→2→3→4 order enforced (4 is independent) |
+| Six Transaction Types | ✅ COMPLIANT | All 6 types consistently processed |
+| Directory Structure | ✅ COMPLIANT | Immutable structure maintained |
+| Schema Enforcement | ✅ COMPLIANT | Strict schemas in all processors |
+| Hive Partitioning | ✅ COMPLIANT | All transaction Parquet files partitioned |
+| Absolute Python Path | ✅ COMPLIANT | All shell scripts use `/opt/anaconda3/bin/python` |
+| Path Management | ✅ COMPLIANT | Relative paths from project root |
+| Cross-Platform Date | ✅ COMPLIANT | macOS and Linux support |
+| Log Rotation | ✅ COMPLIANT | 15-day retention, all scripts |
+| Error Handling | ✅ COMPLIANT | Non-zero exit codes, timestamped logs |
+| SQL Query Management | ✅ COMPLIANT | Complex SQL in `sql/` directory |
+| Python Dependencies | ✅ COMPLIANT | Exact versions pinned |
+| Category Mapping | ✅ COMPLIANT | Business logic preserved |
+| NBS_BASE Immutability | ✅ COMPLIANT | Historical files untouched |
+| PII Protection | ✅ COMPLIANT | No PII in pipeline logs, allowed in manual query scripts |
+| Git Ignore | ✅ COMPLIANT | Data directories excluded |
+| Counter System | ✅ COMPLIANT | Nubico filtering ✓, Idempotent updates ✓, Force mode ✓ |

@@ -661,6 +661,51 @@ grep "$(date +%Y-%m-%d)" Logs/*.log
 | `user_base_by_service.csv` | CSV | ~2 MB | User base aggregated by service |
 | `user_base_by_category.csv` | CSV | ~1 MB | User base aggregated by category |
 | `subscriptions.parquet` | Parquet | Varies | Final comprehensive subscription view |
+| `Counters_CPC.parquet` | Parquet | ~1 MB | CPC-level transaction counters (historical) |
+| `Counters_Service.csv` | CSV | ~4.5 MB | Service-level transaction counters (historical) |
+
+### Counter Schemas
+
+#### Counters_CPC.parquet (13 columns)
+| Column | Type | Description |
+|--------|------|-------------|
+| `date` | Date | Transaction date |
+| `cpc` | Int64 | Content Provider Code |
+| `act_count` | Int64 | Total activations |
+| `act_free` | Int64 | Free activations (rev=0) |
+| `act_pay` | Int64 | Paid activations (rev>0) |
+| `reno_count` | Int64 | Renewal count |
+| `dct_count` | Int64 | Deactivation count |
+| `cnr_count` | Int64 | Cancellation count |
+| `ppd_count` | Int64 | Prepaid transaction count |
+| `rfnd_count` | Int64 | Refund count |
+| `rfnd_amount` | Float64 | Total refund amount (2 decimals) |
+| `rev` | Float64 | Total revenue (2 decimals) |
+| `last_updated` | Datetime | Last update timestamp |
+
+#### Counters_Service.csv (14 columns)
+| Column | Type | Description |
+|--------|------|-------------|
+| `date` | Date | Transaction date |
+| `service_name` | String | Service name from MASTERCPC |
+| `tme_category` | String | TME category |
+| `cpcs` | String | Comma-separated list of CPCs |
+| `act_count` | Int64 | Total activations |
+| `act_free` | Int64 | Free activations (rev=0) |
+| `act_pay` | Int64 | Paid activations (rev>0) |
+| `reno_count` | Int64 | Renewal count |
+| `dct_count` | Int64 | Deactivation count |
+| `cnr_count` | Int64 | Cancellation count |
+| `ppd_count` | Int64 | Prepaid transaction count |
+| `rfnd_count` | Int64 | Refund count |
+| `rfnd_amount` | Float64 | Total refund amount (2 decimals) |
+| `rev` | Float64 | Total revenue (2 decimals) |
+
+**Counter Features:**
+- **Idempotent updates**: Can reprocess dates without duplicates
+- **Nubico filtering**: Excludes services containing "nubico" (case-insensitive)
+- **Auto-discovery**: Backfill mode finds all missing dates automatically
+- **Force mode**: Recompute existing dates with `--force` flag
 
 ### Parquet Partitioning Strategy
 
@@ -698,9 +743,14 @@ launchctl list | grep josemanco
 # Verify data exists
 ls -lh Daily_Data/$(date +%Y-%m-%d)/
 ls -lh Parquet_Data/transactions/act/
+ls -lh Counters/
 
 # Count records in Parquet
 python -c "import polars as pl; print(pl.read_parquet('Parquet_Data/aggregated/subscriptions.parquet').shape)"
+
+# Check counter files
+python -c "import polars as pl; print(f'CPC Counters: {pl.read_parquet(\"Counters/Counters_CPC.parquet\").shape}')"
+wc -l Counters/Counters_Service.csv
 
 # Verify all 6 transaction types
 for type in ACT RENO DCT PPD CNR RFND; do
@@ -711,6 +761,7 @@ done
 # Check disk usage
 du -sh Parquet_Data/
 du -sh User_Base/NBS_BASE/
+du -sh Counters/
 
 # Query specific user data (for debugging)
 python Scripts/others/query_msisdn_from_tx.py <msisdn>
@@ -784,7 +835,8 @@ This project follows these conventions:
 ### Key Directories
 - **Source of Truth:** `Parquet_Data/aggregated/subscriptions.parquet`
 - **Reference Data:** `MASTERCPC.csv` (service/CPC mapping)
-- **Active Scripts:** `Scripts/01_*.py`, `Scripts/02_*.sh`, `Scripts/03_*.py`, `Scripts/04_*.py`
+- **Active Scripts:** `Scripts/01_*.py`, `Scripts/02_*.sh`, `Scripts/03_*.py`, `Scripts/04_*.py`, `Scripts/05_*.py`
+- **Counter Data:** `Counters/Counters_CPC.parquet`, `Counters/Counters_Service.csv`
 - **Temporary Data:** `Daily_Data/` (CSV files, can be deleted after processing)
 
 ---
