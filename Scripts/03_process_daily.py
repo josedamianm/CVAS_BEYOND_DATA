@@ -12,10 +12,10 @@ def process_daily_data(date_str: str):
         date_str: Date in format 'YYYY-MM-DD' (e.g., '2025-11-10')
     """
     
-    #daily_path = Path('Daily_Data')
-    daily_path = Path('/Users/josemanco/Dropbox/BEYOND_DATA_OLD_backup/Daily_Data')
-    #parquet_path = Path('Parquet_Data/transactions')
-    parquet_path = Path('/Users/josemanco/CVAS/CVAS_BEYOND_DATA/Parquet_Data/transactions')
+    # Get project root ensuring it works regardless of CWD
+    project_root = Path(__file__).resolve().parent.parent
+    daily_path = project_root / 'Daily_Data'
+    parquet_path = project_root / 'Parquet_Data' / 'transactions'
     
     # Convert date format for file matching
     file_date = date_str.replace('-', '')  # '2025-11-10' -> '20251110'
