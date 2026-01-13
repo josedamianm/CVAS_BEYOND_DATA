@@ -149,6 +149,7 @@ CVAS_BEYOND_DATA/                         # Project root
 ├── 1.GET_NBS_BASE.sh                     # Stage 1 orchestrator
 ├── 2.FETCH_DAILY_DATA.sh                 # Stage 2 orchestrator
 ├── 3.PROCESS_DAILY_AND_BUILD_VIEW.sh     # Stage 3 orchestrator
+├── 4.BUILD_TRANSACTION_COUNTERS.sh       # Stage 4 orchestrator (independent)
 ├── MASTERCPC.csv                         # Reference: Service/CPC mapping table
 ├── requirements.txt                      # Python dependencies
 ├── README.md                             # This file
@@ -158,10 +159,12 @@ CVAS_BEYOND_DATA/                         # Project root
 │   ├── 02_fetch_remote_nova_data.sh      # [ACTIVE] Remote data fetcher
 │   ├── 03_process_daily.py               # [ACTIVE] CSV to Parquet converter
 │   ├── 04_build_subscription_view.py     # [ACTIVE] Subscription aggregator
+│   ├── 05_build_counters.py              # [ACTIVE] Transaction counter builder
 │   ├── 00_convert_historical.py          # [HISTORICAL] One-time conversion
 │   │
 │   ├── utils/                            # Utility scripts
-│   │   └── log_rotation.sh               # 15-day log retention manager
+│   │   ├── log_rotation.sh               # 15-day log retention manager
+│   │   └── counter_utils.py              # Counter system utilities
 │   │
 │   └── others/                           # Testing & validation scripts
 │       ├── check_transactions_parquet_data.py
@@ -171,6 +174,9 @@ CVAS_BEYOND_DATA/                         # Project root
 │
 ├── sql/                                  # SQL queries
 │   └── build_subscription_view.sql       # 241-line DuckDB aggregation query
+│
+├── tests/                                # Unit tests
+│   └── test_counters.py                  # Counter system tests
 │
 ├── Daily_Data/                           # [GIT-IGNORED] Temporary CSV staging
 │   └── YYYY-MM-DD/                       # Daily folders
@@ -193,6 +199,10 @@ CVAS_BEYOND_DATA/                         # Project root
 │   └── aggregated/                       # Final processed data
 │       └── subscriptions.parquet         # Comprehensive subscription view
 │
+├── Counters/                             # [GIT-IGNORED] Transaction counters
+│   ├── Counters_CPC.parquet              # CPC-level counters (historical)
+│   └── Counters_Service.csv              # Service-level counters (historical)
+│
 ├── User_Base/                            # User base data
 │   ├── NBS_BASE/                         # [GIT-IGNORED] 1100+ daily snapshots
 │   ├── user_base_by_service.csv          # [GIT-IGNORED] Aggregated by service
@@ -201,7 +211,8 @@ CVAS_BEYOND_DATA/                         # Project root
 └── Logs/                                 # [GIT-IGNORED] Execution logs
     ├── 1.GET_NBS_BASE.log
     ├── 2.FETCH_DAILY_DATA.log
-    └── 3.PROCESS_DAILY_AND_BUILD_VIEW.log
+    ├── 3.PROCESS_DAILY_AND_BUILD_VIEW.log
+    └── 4.BUILD_TRANSACTION_COUNTERS.log
 ```
 
 ### File Descriptions
@@ -211,7 +222,8 @@ CVAS_BEYOND_DATA/                         # Project root
 |------|---------|---------|--------------|
 | `1.GET_NBS_BASE.sh` | Downloads and aggregates user base | 8:05 AM | None |
 | `2.FETCH_DAILY_DATA.sh` | Fetches 6 transaction types | 8:25 AM | Script 1 must complete |
-| `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | Processes and builds views | 11:30 AM | Script 2 must complete |
+| `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | Processes and builds views | 8:30 AM | Script 2 must complete |
+| `4.BUILD_TRANSACTION_COUNTERS.sh` | Builds transaction counters | 9:30 AM | Script 3 must complete (independent) |
 
 #### Active Pipeline Scripts (Scripts/)
 | Script | Called By | Purpose |
@@ -220,11 +232,13 @@ CVAS_BEYOND_DATA/                         # Project root
 | `02_fetch_remote_nova_data.sh` | Script 2 (line 57) | Connects to PostgreSQL, fetches transactions |
 | `03_process_daily.py` | Script 3 (line 83) | Converts CSV → Parquet with partitioning |
 | `04_build_subscription_view.py` | Script 3 (line 105) | Builds final subscription view in DuckDB |
+| `05_build_counters.py` | Script 4 (line 45) | Aggregates transaction counts by CPC and Service |
 
 #### Utility Scripts
 | Script | Purpose |
 |--------|---------|
 | `utils/log_rotation.sh` | Deletes logs older than 15 days |
+| `utils/counter_utils.py` | Counter system utilities (MASTERCPC parsing, atomic writes) |
 
 #### Testing & Validation Scripts (Scripts/others/)
 | Script | Purpose |
@@ -322,6 +336,37 @@ Log completion timestamp
 END
 ```
 
+### Stage 4: Transaction Counters (4.BUILD_TRANSACTION_COUNTERS.sh)
+
+```bash
+START
+  ↓
+Log rotation (delete logs > 15 days)
+  ↓
+Set DATE (defaults to yesterday)
+  ↓
+Execute: Scripts/05_build_counters.py <DATE>
+  ├─ Load transaction Parquet files for specified date
+  ├─ Aggregate counts by CPC:
+  │   ├─ Count transactions by type (ACT, RENO, DCT, CNR, PPD, RFND)
+  │   ├─ Split activations: act_free (rev=0) vs act_pay (rev>0)
+  │   ├─ Sum revenue (rev) and refund amounts (rfnd_amount)
+  │   └─ Round monetary values to 2 decimals
+  ├─ Load MASTERCPC.csv mapping
+  ├─ Aggregate by Service:
+  │   ├─ Group CPCs by service_name
+  │   ├─ Sum all transaction counts
+  │   ├─ Concatenate CPC lists per service
+  │   └─ Calculate service-level revenue and refunds
+  ├─ Merge with historical counters (idempotent updates)
+  ├─ Save to Counters/Counters_CPC.parquet
+  └─ Save to Counters/Counters_Service.csv
+  ↓
+Log completion timestamp
+  ↓
+END
+```
+
 ---
 
 ## Installation & Setup
@@ -368,17 +413,18 @@ END
 
 ### Launchd Configuration
 
-The pipeline runs automatically via macOS launchd with 3 scheduled jobs:
+The pipeline runs automatically via macOS launchd with 4 scheduled jobs:
 
 | Job ID | Script | Schedule | Purpose |
 |--------|--------|----------|---------|
 | `com.josemanco.nbs_base` | `1.GET_NBS_BASE.sh` | 8:05 AM daily | User base collection |
 | `com.josemanco.fetch_daily` | `2.FETCH_DAILY_DATA.sh` | 8:25 AM daily | Transaction data fetch |
-| `com.josemanco.process_daily` | `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | 11:30 AM daily | Processing & aggregation |
+| `com.josemanco.process_daily` | `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | 8:30 AM daily | Processing & aggregation |
+| `com.josemanco.build_counters` | `4.BUILD_TRANSACTION_COUNTERS.sh` | 9:30 AM daily | Transaction counters (independent) |
 
 ### Modify Schedule
 
-Replace `<job>` with: `nbs_base`, `fetch_daily`, or `process_daily`
+Replace `<job>` with: `nbs_base`, `fetch_daily`, `process_daily`, or `build_counters`
 
 1. **Edit the plist file:**
    ```bash
@@ -559,7 +605,8 @@ python Scripts/others/query_tmuserid_from_tx.py 8343817051345500000
 Logs/
 ├── 1.GET_NBS_BASE.log                    # Stage 1 execution log
 ├── 2.FETCH_DAILY_DATA.log                # Stage 2 execution log
-└── 3.PROCESS_DAILY_AND_BUILD_VIEW.log    # Stage 3 execution log
+├── 3.PROCESS_DAILY_AND_BUILD_VIEW.log    # Stage 3 execution log
+└── 4.BUILD_TRANSACTION_COUNTERS.log      # Stage 4 execution log
 ```
 
 ### View Logs
@@ -573,6 +620,9 @@ tail -n 50 Logs/2.FETCH_DAILY_DATA.log
 
 # Real-time monitoring
 tail -f Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log
+
+# Monitor counter system
+tail -f Logs/4.BUILD_TRANSACTION_COUNTERS.log
 
 # Search for errors
 grep -i error Logs/*.log
