@@ -17,23 +17,15 @@
 
 ## Project Description
 
-**CVAS Beyond Data** is a production-grade ETL (Extract, Transform, Load) pipeline designed for telecommunications subscription data processing and analytics. The system automates the daily collection, processing, and aggregation of CVAS (Content Value Added Services) transaction data from a remote PostgreSQL database.
-
-### Purpose
-Process and analyze telecommunication subscription lifecycle data by:
-- Extracting 6 transaction types from remote PostgreSQL servers
-- Transforming CSV data into optimized Parquet columnar format
-- Building comprehensive subscription views for business analytics
-- Aggregating user base information from daily snapshots
+**CVAS Beyond Data** is a production-grade ETL (Extract, Transform, Load) pipeline designed for telecommunications subscription data processing and analytics. It automates the daily collection of 6 transaction types (ACT, RENO, DCT, CNR, RFND, PPD) from remote PostgreSQL servers, transforms them into optimized Parquet columnar format, and builds comprehensive lifecycle views for business analytics.
 
 ### Key Features
-- **Automated Daily Execution**: Runs via macOS launchd scheduler (3 scheduled jobs)
-- **Sequential Pipeline**: 3-stage orchestration ensuring data consistency
-- **Columnar Storage**: Parquet format with Hive partitioning for efficient querying
-- **User Base Tracking**: Processes 1100+ daily snapshots of subscriber data
-- **Remote Data Fetching**: Secure SSH/SCP connection to production database
-- **Transaction Processing**: Handles 6 transaction types (ACT, RENO, DCT, CNR, RFND, PPD)
-- **Log Management**: 15-day rotation with detailed execution tracking
+- **Automated Daily Execution**: Runs via macOS launchd scheduler (3 sequential jobs).
+- **Sequential Pipeline**: Strict 3-stage orchestration ensuring data consistency (1.UserBase → 2.Fetch → 3.Process).
+- **Columnar Storage**: Parquet format with Hive partitioning (`year_month=YYYY-MM`) for efficient querying.
+- **User Base Tracking**: Aggregates 1100+ daily snapshots of user base data.
+- **Secure Handling**: SSH/SCP data transfer with strict PII log masking.
+- **Auto-Maintenance**: 15-day log retention policy.
 
 ---
 
@@ -214,6 +206,8 @@ CVAS_BEYOND_DATA/                         # Project root
 | `check_subscriptions_parquet_data.py` | Validates subscription Parquet integrity |
 | `check_users.py` | Validates user data quality |
 | `extract_music_subscriptions.py` | Extracts music-specific subscriptions |
+| `query_msisdn_from_tx.py` | **NEW:** Query full history by MSISDN |
+| `query_tmuserid_from_tx.py` | **NEW:** Query full history by TMUSERID |
 
 ---
 
@@ -446,6 +440,49 @@ bash Scripts/02_fetch_remote_nova_data.sh ACT 2024-01-15
 /opt/anaconda3/bin/python Scripts/04_build_subscription_view.py
 ```
 
+### Data Querying Tools
+
+Validate data for specific users using the provided utility scripts:
+
+```bash
+# Query by MSISDN (automatically adds country code '34' if missing)
+# Outputs: Act/Reno history, revenue summary, and refunds
+python Scripts/others/query_msisdn_from_tx.py 34686516147
+
+# Query by TMUSERID
+# Outputs: Linked MSISDNs and full transaction history
+python Scripts/others/query_tmuserid_from_tx.py 8343817051345500000
+```
+
+### Query Transaction Data
+
+Query subscription lifecycle by MSISDN or TMUSERID:
+
+```bash
+# Query by MSISDN (automatically adds country code '34' if missing)
+python Scripts/others/query_msisdn_from_tx.py 686516147
+python Scripts/others/query_msisdn_from_tx.py 34686516147
+
+# Query by TMUSERID
+python Scripts/others/query_tmuserid_from_tx.py 8343817051345500000
+```
+
+**Output includes:**
+- MSISDN ↔ TMUSERID mapping (all unique identifiers associated)
+- Full subscription lifecycle grouped by `subscription_id`:
+  - ACT (Activations)
+  - RENO (Renewals)
+  - DCT (Deactivations)
+  - CNR (Cancellations)
+  - RFND (Refunds)
+- Summary statistics (counts per transaction type, total revenue, total refunded)
+- PPD (Pay Per Download) one-time purchases (displayed separately)
+
+**Query Logic:**
+1. Step 1: Find all `subscription_id`s associated with the identifier (from ACT, RENO, DCT)
+2. Step 2: Retrieve all transactions (ACT, RENO, DCT, CNR, RFND) for those subscription_ids
+3. Step 3: Query PPD transactions directly by the original identifier
+
 ---
 
 ## Monitoring & Logs
@@ -558,6 +595,10 @@ done
 # Check disk usage
 du -sh Parquet_Data/
 du -sh User_Base/NBS_BASE/
+
+# Query specific user data (for debugging)
+python Scripts/others/query_msisdn_from_tx.py <msisdn>
+python Scripts/others/query_tmuserid_from_tx.py <tmuserid>
 ```
 
 ### Emergency Recovery
@@ -609,7 +650,7 @@ set -e  # Exit on error
 
 ---
 
-## Notes for LLMs
+## Developer Guidelines
 
 This project follows these conventions:
 
@@ -634,4 +675,4 @@ This project follows these conventions:
 
 **Project Maintained By:** Jose Manco  
 **Project Path:** `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`  
-**Last Updated:** 2024
+**Last Updated:** 2025
