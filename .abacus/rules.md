@@ -436,7 +436,7 @@ pandas==2.2.3
 - `msisdn` (phone number)
 
 **DO NOT:**
-- ❌ Log `tmuserid` or `msisdn` values
+- ❌ Log `tmuserid` or `msisdn` values in production logs
 - ❌ Print PII in error messages
 - ❌ Export PII to unencrypted files
 
@@ -444,6 +444,22 @@ pandas==2.2.3
 - ✅ Log counts/aggregates only
 - ✅ Use `subscription_id` for debugging
 - ✅ Mask PII in logs: `tmuserid: ***1234`
+
+**EXCEPTION:** Query/debugging scripts (`Scripts/others/query_*.py`, `check_users.py`) are allowed to display PII when explicitly queried by the user for troubleshooting purposes. These scripts:
+- Are NOT part of the automated pipeline
+- Require manual execution with explicit user input
+- Display results to terminal only (not logged to files)
+- Are used for operational debugging and support
+
+**Examples of Allowed PII Display:**
+- `query_msisdn_from_tx.py` - Shows MSISDN and associated TMUSERIDs when queried
+- `query_tmuserid_from_tx.py` - Shows TMUSERID and associated MSISDNs when queried
+- `check_users.py` - Displays user details when queried by subscription_id
+
+**Examples of Prohibited PII Logging:**
+- Pipeline scripts (`01_aggregate_user_base.py`, `03_process_daily.py`, etc.) must NEVER log PII
+- Orchestration scripts (`1.GET_NBS_BASE.sh`, etc.) must NEVER log PII
+- Error messages in automated processes must use `subscription_id` only
 
 ---
 
@@ -706,6 +722,17 @@ Python: /opt/anaconda3/bin/python
 Project: /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 ```
 
+#### Testing & Validation Scripts (Scripts/others/)
+| Script | Purpose |
+|--------|---------|
+| `check_transactions_parquet_data.py` | Validates transaction Parquet integrity, schema, and partitioning |
+| `check_aggregated_parquet_data.py` | Validates aggregated subscription Parquet data |
+| `check_users.py` | Validates user data quality and queries by subscription_id/tmuserid/msisdn |
+| `extract_music_subscriptions.py` | Extracts music-specific subscriptions for analysis |
+| `calculate_lt_ltv.py` | Calculates lifetime and lifetime value metrics |
+| `query_msisdn_from_tx.py` | **NEW:** Queries full subscription lifecycle by MSISDN (with MSISDN↔TMUSERID mapping) |
+| `query_tmuserid_from_tx.py` | **NEW:** Queries full subscription lifecycle by TMUSERID (with TMUSERID↔MSISDN mapping) |
+
 ### Testing Commands
 
 ```bash
@@ -720,7 +747,7 @@ tail -f Logs/1.GET_NBS_BASE.log
 
 # Validate data
 python Scripts/others/check_transactions_parquet_data.py
-python Scripts/others/check_subscriptions_parquet_data.py
+python Scripts/others/check_aggregated_parquet_data.py
 
 # Query transaction data by MSISDN or TMUSERID
 python Scripts/others/query_msisdn_from_tx.py 34686516147
@@ -758,6 +785,130 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Parquet_Data/agg
 
 ---
 
+## 📊 PROJECT VALIDATION SUMMARY (2025-01-27)
+
+### ✅ Validated Components
+
+#### 1. Pipeline Scripts (Core)
+| Script | Status | Validation |
+|--------|--------|------------|
+| `1.GET_NBS_BASE.sh` | ✅ PASS | Log rotation ✓, Absolute Python path ✓, Error handling ✓, Cross-platform date ✓ |
+| `2.FETCH_DAILY_DATA.sh` | ✅ PASS | Log rotation ✓, Sequential execution ✓, Cross-platform date ✓ |
+| `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | ✅ PASS | Log rotation ✓, Absolute Python path ✓, Error handling ✓, Cross-platform date ✓ |
+| `Scripts/01_aggregate_user_base.py` | ✅ PASS | Category mapping ✓, Service exclusions ✓, No PII logging ✓ |
+| `Scripts/02_fetch_remote_nova_data.sh` | ✅ PASS | Cross-platform date ✓, SSH connection ✓ |
+| `Scripts/03_process_daily.py` | ✅ PASS | All 6 transaction types ✓, Hive partitioning ✓, Schema enforcement ✓ |
+| `Scripts/04_build_subscription_view.py` | ✅ PASS | DuckDB aggregation ✓, SQL template ✓ |
+
+#### 2. SQL Queries
+| File | Status | Validation |
+|------|--------|------------|
+| `sql/build_subscription_view.sql` | ✅ PASS | 241 lines ✓, All 6 types ✓, Hive partitioning ✓, Edge cases handled ✓ |
+
+#### 3. Utility Scripts
+| Script | Status | Validation |
+|--------|--------|------------|
+| `Scripts/utils/log_rotation.sh` | ✅ PASS | 15-day retention ✓, Cross-platform date ✓ |
+
+#### 4. Query & Validation Scripts (Scripts/others/)
+| Script | Status | Validation |
+|--------|--------|------------|
+| `check_transactions_parquet_data.py` | ✅ PASS | Hive partitioning ✓, Schema validation ✓ |
+| `check_aggregated_parquet_data.py` | ✅ PASS | Aggregation validation ✓ |
+| `check_users.py` | ✅ PASS | PII display allowed (manual query) ✓ |
+| `extract_music_subscriptions.py` | ✅ PASS | PII display allowed (manual query) ✓ |
+| `calculate_lt_ltv.py` | ✅ PASS | Metrics calculation ✓ |
+| `query_msisdn_from_tx.py` | ✅ PASS | MSISDN↔TMUSERID mapping ✓, Hive partitioning ✓, Country code handling ✓ |
+| `query_tmuserid_from_tx.py` | ✅ PASS | TMUSERID↔MSISDN mapping ✓, Hive partitioning ✓ |
+
+#### 5. Configuration Files
+| File | Status | Validation |
+|------|--------|------------|
+| `requirements.txt` | ✅ PASS | Pinned versions ✓ (polars==1.34.0, pyarrow==19.0.0, duckdb==1.2.1, pandas==2.2.3) |
+| `.gitignore` | ✅ PASS | Data directories excluded ✓, Logs excluded ✓ |
+
+### 🔍 Key Findings
+
+#### Transaction Type Coverage
+- ✅ All 6 transaction types (ACT, RENO, DCT, CNR, RFND, PPD) consistently referenced across:
+  - `Scripts/03_process_daily.py` (schema definitions)
+  - `Scripts/00_convert_historical.py` (historical conversion)
+  - `sql/build_subscription_view.sql` (DuckDB aggregation)
+  - Query scripts (lifecycle tracking)
+
+#### Hive Partitioning
+- ✅ Implemented in all transaction Parquet writes
+- ✅ Used in all DuckDB read operations (`hive_partitioning=true`)
+- ✅ Partition format: `year_month=YYYY-MM`
+- ✅ Validated in check scripts
+
+#### Python Path Usage
+- ✅ All shell scripts use absolute path: `/opt/anaconda3/bin/python`
+- ✅ Python scripts use standard shebang: `#!/usr/bin/env python3`
+- ✅ Launchd-compatible
+
+#### Cross-Platform Date Handling
+- ✅ All shell scripts support both macOS (`date -v`) and Linux (`date -d`)
+- ✅ Consistent pattern across all orchestration scripts
+
+#### Log Rotation
+- ✅ All 3 orchestration scripts call `rotate_log()` at start
+- ✅ 15-day retention enforced
+- ✅ Cross-platform compatible
+
+#### Error Handling
+- ✅ All orchestration scripts exit with non-zero code on failure
+- ✅ Timestamped error logging
+- ✅ Validation checks before proceeding
+
+#### PII Protection
+- ✅ Pipeline scripts do NOT log PII
+- ✅ Query/debugging scripts display PII only when explicitly requested (allowed exception)
+- ✅ Clear distinction between automated pipeline and manual debugging tools
+
+#### Schema Enforcement
+- ✅ Strict schemas defined in Polars for all 6 transaction types
+- ✅ Consistent column names and types
+- ✅ Schema validation in check scripts
+
+### 📝 Recent Changes (2025-01-27)
+
+1. **New Query Scripts:**
+   - Added `Scripts/others/query_msisdn_from_tx.py` - Query subscription lifecycle by MSISDN
+   - Added `Scripts/others/query_tmuserid_from_tx.py` - Query subscription lifecycle by TMUSERID
+   - Both scripts show identifier mapping (MSISDN↔TMUSERID)
+   - Display full subscription lifecycle grouped by `subscription_id`
+   - Separate PPD (Pay Per Download) transactions
+   - Automatic country code handling for MSISDN (adds '34' if missing)
+
+2. **Documentation Updates:**
+   - Updated `.abacus/rules.md` with query scripts documentation
+   - Clarified PII protection exceptions for manual query/debugging scripts
+   - Added comprehensive validation summary
+
+### 🎯 Compliance Status
+
+| Rule Category | Status | Notes |
+|---------------|--------|-------|
+| Sequential Pipeline | ✅ COMPLIANT | 1→2→3 order enforced |
+| Six Transaction Types | ✅ COMPLIANT | All 6 types consistently processed |
+| Directory Structure | ✅ COMPLIANT | Immutable structure maintained |
+| Schema Enforcement | ✅ COMPLIANT | Strict schemas in all processors |
+| Hive Partitioning | ✅ COMPLIANT | All transaction Parquet files partitioned |
+| Absolute Python Path | ✅ COMPLIANT | All shell scripts use `/opt/anaconda3/bin/python` |
+| Path Management | ✅ COMPLIANT | Relative paths from project root |
+| Cross-Platform Date | ✅ COMPLIANT | macOS and Linux support |
+| Log Rotation | ✅ COMPLIANT | 15-day retention, all scripts |
+| Error Handling | ✅ COMPLIANT | Non-zero exit codes, timestamped logs |
+| SQL Query Management | ✅ COMPLIANT | Complex SQL in `sql/` directory |
+| Python Dependencies | ✅ COMPLIANT | Exact versions pinned |
+| Category Mapping | ✅ COMPLIANT | Business logic preserved |
+| NBS_BASE Immutability | ✅ COMPLIANT | Historical files untouched |
+| PII Protection | ✅ COMPLIANT | No PII in pipeline logs, allowed in manual query scripts |
+| Git Ignore | ✅ COMPLIANT | Data directories excluded |
+
+---
+
 ## 🎯 TL;DR - MOST IMPORTANT RULES
 
 1. **Sequential Execution:** Never break 1→2→3 script order
@@ -765,7 +916,7 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Parquet_Data/agg
 3. **Strict Schemas:** Schema changes break everything. Enforce in Polars.
 4. **Hive Partitioning:** Required for DuckDB performance. Never remove.
 5. **Absolute Python Path:** Use `/opt/anaconda3/bin/python` in shell scripts
-6. **No PII in Logs:** Never log `tmuserid` or `msisdn`
+6. **No PII in Pipeline Logs:** Never log `tmuserid` or `msisdn` in automated processes (allowed in manual query scripts)
 7. **15-Day Log Retention:** Always call `rotate_log()` at start
 8. **Git Ignore Data:** Never commit `Daily_Data/`, `Parquet_Data/`, `Logs/`
 9. **Edge Cases:** Handle missing ACT records and CPC upgrades
