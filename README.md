@@ -67,7 +67,7 @@
 └────────────────────────────────────────────────────────────────┘
                               ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ STAGE 3: PROCESSING & AGGREGATION (11:30 AM)                   │
+│ STAGE 3: PROCESSING & AGGREGATION (8:30 AM)                    │
 │ Script: 3.PROCESS_DAILY_AND_BUILD_VIEW.sh                      │
 ├────────────────────────────────────────────────────────────────┤
 │ Step 1: Validate all 6 CSV files exist                        │
