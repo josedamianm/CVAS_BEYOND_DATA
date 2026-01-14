@@ -9,6 +9,11 @@ User_Base/NBS_BASE/*
 User_Base/user_base_by_category.csv
 User_Base/user_base_by_service.csv
 
+# Counters
+Counters/*.parquet
+Counters/*.csv
+!Counters/.gitkeep
+
 # Logs
 Logs/*.log
 Logs/*.stderr
