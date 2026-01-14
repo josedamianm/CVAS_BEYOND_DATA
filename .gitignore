@@ -62,3 +62,5 @@ env/
 *.tmp
 *.bak
 *.backup
+Counters/Counters_CPC.parquet
+Counters/Counters_Service.csv
