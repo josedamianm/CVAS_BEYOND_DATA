@@ -228,7 +228,8 @@ def aggregate_by_service(
     ])
 
     joined = joined.filter(
-        ~pl.col('service_name').str.to_lowercase().str.contains('nubico')
+        ~pl.col('service_name').str.to_lowercase().str.contains('nubico') &
+        ~pl.col('service_name').str.to_lowercase().str.contains('movistar apple music')
     )
 
     aggregated = joined.group_by(['date', 'service_name', 'tme_category']).agg([

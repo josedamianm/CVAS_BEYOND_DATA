@@ -27,7 +27,7 @@ def extract_date_from_filename(filename):
 def should_exclude_service(service_name):
     """Check if service should be excluded based on service name."""
     service_lower = service_name.lower()
-    excluded_keywords = ['nubico', 'challenge arena']
+    excluded_keywords = ['nubico', 'challenge arena', 'movistar apple music']
     return any(keyword in service_lower for keyword in excluded_keywords)
 
 def map_category(category):
