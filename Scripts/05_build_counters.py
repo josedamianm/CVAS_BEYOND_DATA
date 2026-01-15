@@ -73,25 +73,32 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
             tx_upg_dct[tx_type] = {}
             continue
 
-        counts = df.group_by('cpc').agg(pl.len().alias('count'))
-        tx_counts[tx_type] = {row['cpc']: row['count'] for row in counts.iter_rows(named=True)}
+        if tx_type == 'act' and 'channel_act' in df.columns:
+            non_upgrade_df = df.filter(pl.col('channel_act') != 'UPGRADE')
+            counts = non_upgrade_df.group_by('cpc').agg(pl.len().alias('count'))
+            tx_counts[tx_type] = {row['cpc']: row['count'] for row in counts.iter_rows(named=True)}
+
+            upg_counts = df.filter(pl.col('channel_act') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
+            tx_upg[tx_type] = {row['cpc']: row['count'] for row in upg_counts.iter_rows(named=True)}
+        else:
+            counts = df.group_by('cpc').agg(pl.len().alias('count'))
+            tx_counts[tx_type] = {row['cpc']: row['count'] for row in counts.iter_rows(named=True)}
+            tx_upg[tx_type] = {}
 
         if tx_type == 'act' and 'rev' in df.columns:
-            free_counts = df.filter(pl.col('rev') == 0).group_by('cpc').agg(pl.len().alias('count'))
+            if 'channel_act' in df.columns:
+                non_upgrade_df = df.filter(pl.col('channel_act') != 'UPGRADE')
+            else:
+                non_upgrade_df = df
+
+            free_counts = non_upgrade_df.filter(pl.col('rev') == 0).group_by('cpc').agg(pl.len().alias('count'))
             tx_act_free[tx_type] = {row['cpc']: row['count'] for row in free_counts.iter_rows(named=True)}
 
-            pay_counts = df.filter(pl.col('rev') > 0).group_by('cpc').agg(pl.len().alias('count'))
+            pay_counts = non_upgrade_df.filter(pl.col('rev') > 0).group_by('cpc').agg(pl.len().alias('count'))
             tx_act_pay[tx_type] = {row['cpc']: row['count'] for row in pay_counts.iter_rows(named=True)}
-
-            if 'channel_act' in df.columns:
-                upg_counts = df.filter(pl.col('channel_act') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
-                tx_upg[tx_type] = {row['cpc']: row['count'] for row in upg_counts.iter_rows(named=True)}
-            else:
-                tx_upg[tx_type] = {}
         else:
             tx_act_free[tx_type] = {}
             tx_act_pay[tx_type] = {}
-            tx_upg[tx_type] = {}
 
         if tx_type == 'dct' and 'channel_dct' in df.columns:
             upg_dct_counts = df.filter(pl.col('channel_dct') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
@@ -112,6 +119,8 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
             tx_rfnd_amounts[tx_type] = {}
 
         all_cpcs.update(tx_counts[tx_type].keys())
+        if tx_type == 'act':
+            all_cpcs.update(tx_upg[tx_type].keys())
 
     if not all_cpcs:
         return pl.DataFrame(schema={
