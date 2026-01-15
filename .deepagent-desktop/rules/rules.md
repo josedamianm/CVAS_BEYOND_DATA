@@ -970,7 +970,7 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
    - Added counter schemas to Data Schema section (13 columns for CPC, 14 for Service)
    - Updated Directory Structure, File Descriptions, Pipeline Workflow, Scheduled Automation
    - Added counter validation commands to Troubleshooting section
-   - Updated `.abacus/rules.md` with Nubico filtering and duplicate handling rules
+   - Updated `.deepagent-desktop/rules/rules.md` with Nubico filtering and duplicate handling rules
    - Fixed execution times: Stage 3 (8:30 AM), Stage 4 (9:30 AM)
 
 3. **Launchd Configuration:**
