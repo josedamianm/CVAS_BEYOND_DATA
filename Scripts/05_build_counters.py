@@ -58,6 +58,8 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
     tx_rfnd_amounts = {}
     tx_act_free = {}
     tx_act_pay = {}
+    tx_upg = {}
+    tx_upg_dct = {}
 
     for tx_type in TX_TYPES:
         df = load_transactions_for_date(parquet_base, target_date, tx_type)
@@ -67,6 +69,8 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
             tx_rfnd_amounts[tx_type] = {}
             tx_act_free[tx_type] = {}
             tx_act_pay[tx_type] = {}
+            tx_upg[tx_type] = {}
+            tx_upg_dct[tx_type] = {}
             continue
 
         counts = df.group_by('cpc').agg(pl.len().alias('count'))
@@ -78,9 +82,22 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
 
             pay_counts = df.filter(pl.col('rev') > 0).group_by('cpc').agg(pl.len().alias('count'))
             tx_act_pay[tx_type] = {row['cpc']: row['count'] for row in pay_counts.iter_rows(named=True)}
+
+            if 'channel_act' in df.columns:
+                upg_counts = df.filter(pl.col('channel_act') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
+                tx_upg[tx_type] = {row['cpc']: row['count'] for row in upg_counts.iter_rows(named=True)}
+            else:
+                tx_upg[tx_type] = {}
         else:
             tx_act_free[tx_type] = {}
             tx_act_pay[tx_type] = {}
+            tx_upg[tx_type] = {}
+
+        if tx_type == 'dct' and 'channel_dct' in df.columns:
+            upg_dct_counts = df.filter(pl.col('channel_dct') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
+            tx_upg_dct[tx_type] = {row['cpc']: row['count'] for row in upg_dct_counts.iter_rows(named=True)}
+        else:
+            tx_upg_dct[tx_type] = {}
 
         if 'rev' in df.columns:
             revenue = df.group_by('cpc').agg(pl.col('rev').sum().alias('revenue'))
@@ -103,8 +120,10 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
             'act_count': pl.Int64,
             'act_free': pl.Int64,
             'act_pay': pl.Int64,
+            'upg_count': pl.Int64,
             'reno_count': pl.Int64,
             'dct_count': pl.Int64,
+            'upg_dct_count': pl.Int64,
             'cnr_count': pl.Int64,
             'ppd_count': pl.Int64,
             'rfnd_count': pl.Int64,
@@ -123,6 +142,8 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
 
         row['act_free'] = tx_act_free.get('act', {}).get(cpc, 0)
         row['act_pay'] = tx_act_pay.get('act', {}).get(cpc, 0)
+        row['upg_count'] = tx_upg.get('act', {}).get(cpc, 0)
+        row['upg_dct_count'] = tx_upg_dct.get('dct', {}).get(cpc, 0)
 
         total_rfnd = sum(tx_rfnd_amounts[tx_type].get(cpc, 0.0) for tx_type in TX_TYPES)
         row['rfnd_amount'] = round(total_rfnd, 2)
@@ -164,6 +185,12 @@ def merge_counters(existing: pl.DataFrame, new: pl.DataFrame, target_date: str) 
     if 'act_pay' not in filtered.columns:
         filtered = filtered.with_columns(pl.lit(0).cast(pl.Int64).alias('act_pay'))
 
+    if 'upg_count' not in filtered.columns:
+        filtered = filtered.with_columns(pl.lit(0).cast(pl.Int64).alias('upg_count'))
+
+    if 'upg_dct_count' not in filtered.columns:
+        filtered = filtered.with_columns(pl.lit(0).cast(pl.Int64).alias('upg_dct_count'))
+
     filtered = filtered.with_columns([
         pl.col('rev').round(2),
         pl.col('rfnd_amount').round(2)
@@ -171,7 +198,7 @@ def merge_counters(existing: pl.DataFrame, new: pl.DataFrame, target_date: str) 
 
     new_with_ts = new.with_columns(pl.lit(datetime.now()).alias('last_updated'))
 
-    expected_cols = ['date', 'cpc', 'act_count', 'act_free', 'act_pay', 'reno_count', 'dct_count', 'cnr_count', 'ppd_count', 'rfnd_count', 'rfnd_amount', 'rev', 'last_updated']
+    expected_cols = ['date', 'cpc', 'act_count', 'act_free', 'act_pay', 'upg_count', 'reno_count', 'dct_count', 'upg_dct_count', 'cnr_count', 'ppd_count', 'rfnd_count', 'rfnd_amount', 'rev', 'last_updated']
     filtered = filtered.select(expected_cols)
     new_with_ts = new_with_ts.select(expected_cols)
 
@@ -196,16 +223,23 @@ def aggregate_by_service(
             'service_name': pl.Utf8,
             'tme_category': pl.Utf8,
             'cpcs': pl.Utf8,
+            'Free_CPC': pl.Int64,
+            'Free_Period': pl.Int64,
+            'Upgrade_CPC': pl.Int64,
+            'CHG_Period': pl.Int64,
+            'CHG_Price': pl.Float64,
             'act_count': pl.Int64,
             'act_free': pl.Int64,
             'act_pay': pl.Int64,
+            'upg_count': pl.Int64,
             'reno_count': pl.Int64,
             'dct_count': pl.Int64,
+            'upg_dct_count': pl.Int64,
             'cnr_count': pl.Int64,
             'ppd_count': pl.Int64,
             'rfnd_count': pl.Int64,
-            'rev': pl.Float64,
             'rfnd_amount': pl.Float64,
+            'rev': pl.Float64,
         }), []
 
     all_cpcs = set(counters['cpc'].unique().to_list())
@@ -215,8 +249,22 @@ def aggregate_by_service(
     unknown_mapping = pl.DataFrame({
         'cpc': unmapped_cpcs,
         'service_name': ['UNKNOWN'] * len(unmapped_cpcs),
-        'tme_category': [''] * len(unmapped_cpcs)
-    }) if unmapped_cpcs else pl.DataFrame(schema={'cpc': pl.Int64, 'service_name': pl.Utf8, 'tme_category': pl.Utf8})
+        'tme_category': [''] * len(unmapped_cpcs),
+        'Free_CPC': [0] * len(unmapped_cpcs),
+        'Free_Period': [0] * len(unmapped_cpcs),
+        'Upgrade_CPC': [0] * len(unmapped_cpcs),
+        'CHG_Period': [0] * len(unmapped_cpcs),
+        'CHG_Price': [0.0] * len(unmapped_cpcs)
+    }) if unmapped_cpcs else pl.DataFrame(schema={
+        'cpc': pl.Int64,
+        'service_name': pl.Utf8,
+        'tme_category': pl.Utf8,
+        'Free_CPC': pl.Int64,
+        'Free_Period': pl.Int64,
+        'Upgrade_CPC': pl.Int64,
+        'CHG_Period': pl.Int64,
+        'CHG_Price': pl.Float64
+    })
 
     full_map = pl.concat([cpc_map, unknown_mapping])
 
@@ -224,7 +272,12 @@ def aggregate_by_service(
 
     joined = joined.with_columns([
         pl.col('service_name').fill_null('UNKNOWN'),
-        pl.col('tme_category').fill_null('')
+        pl.col('tme_category').fill_null(''),
+        pl.col('Free_CPC').fill_null(0),
+        pl.col('Free_Period').fill_null(0),
+        pl.col('Upgrade_CPC').fill_null(0),
+        pl.col('CHG_Period').fill_null(0),
+        pl.col('CHG_Price').fill_null(0.0)
     ])
 
     joined = joined.filter(
@@ -237,17 +290,48 @@ def aggregate_by_service(
         pl.col('act_count').sum(),
         pl.col('act_free').sum(),
         pl.col('act_pay').sum(),
+        pl.col('upg_count').sum(),
         pl.col('reno_count').sum(),
         pl.col('dct_count').sum(),
+        pl.col('upg_dct_count').sum(),
         pl.col('cnr_count').sum(),
         pl.col('ppd_count').sum(),
         pl.col('rfnd_count').sum(),
         pl.col('rfnd_amount').sum().round(2),
         pl.col('rev').sum().round(2),
+        pl.col('Free_CPC').first(),
+        pl.col('Free_Period').first(),
+        pl.col('Upgrade_CPC').first(),
+        pl.col('CHG_Period').first(),
+        pl.col('CHG_Price').first()
     ]).sort(['date', 'service_name'])
 
     aggregated = aggregated.with_columns([
         pl.col('cpcs').cast(pl.List(pl.Utf8)).list.join(', ')
+    ])
+
+    aggregated = aggregated.select([
+        'date',
+        'service_name',
+        'tme_category',
+        'cpcs',
+        'Free_CPC',
+        'Free_Period',
+        'Upgrade_CPC',
+        'CHG_Period',
+        'CHG_Price',
+        'act_count',
+        'act_free',
+        'act_pay',
+        'upg_count',
+        'reno_count',
+        'dct_count',
+        'upg_dct_count',
+        'cnr_count',
+        'ppd_count',
+        'rfnd_count',
+        'rfnd_amount',
+        'rev'
     ])
 
     return aggregated, unmapped_cpcs
@@ -445,3 +529,134 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def aggregate_by_service(
+    counters: pl.DataFrame,
+    cpc_map: pl.DataFrame
+) -> tuple[pl.DataFrame, list[int]]:
+    """
+    Aggregate CPC counters by Service Name.
+    Excludes services containing 'nubico' (case-insensitive).
+
+    Returns:
+        - Aggregated DataFrame
+        - List of unmapped CPCs
+    """
+    if counters.is_empty():
+        return pl.DataFrame(schema={
+            'date': pl.Date,
+            'service_name': pl.Utf8,
+            'tme_category': pl.Utf8,
+            'cpcs': pl.Utf8,
+            'Free_CPC': pl.Int64,
+            'Free_Period': pl.Int64,
+            'Upgrade_CPC': pl.Int64,
+            'CHG_Period': pl.Int64,
+            'CHG_Price': pl.Float64,
+            'act_count': pl.Int64,
+            'act_free': pl.Int64,
+            'act_pay': pl.Int64,
+            'upg_count': pl.Int64,
+            'reno_count': pl.Int64,
+            'dct_count': pl.Int64,
+            'upg_dct_count': pl.Int64,
+            'cnr_count': pl.Int64,
+            'ppd_count': pl.Int64,
+            'rfnd_count': pl.Int64,
+            'rfnd_amount': pl.Float64,
+            'rev': pl.Float64,
+        }), []
+
+    all_cpcs = set(counters['cpc'].unique().to_list())
+    mapped_cpcs = set(cpc_map['cpc'].unique().to_list())
+    unmapped_cpcs = sorted(all_cpcs - mapped_cpcs)
+
+    unknown_mapping = pl.DataFrame({
+        'cpc': unmapped_cpcs,
+        'service_name': ['UNKNOWN'] * len(unmapped_cpcs),
+        'tme_category': [''] * len(unmapped_cpcs),
+        'Free_CPC': [0] * len(unmapped_cpcs),
+        'Free_Period': [0] * len(unmapped_cpcs),
+        'Upgrade_CPC': [0] * len(unmapped_cpcs),
+        'CHG_Period': [0] * len(unmapped_cpcs),
+        'CHG_Price': [0.0] * len(unmapped_cpcs)
+    }) if unmapped_cpcs else pl.DataFrame(schema={
+        'cpc': pl.Int64,
+        'service_name': pl.Utf8,
+        'tme_category': pl.Utf8,
+        'Free_CPC': pl.Int64,
+        'Free_Period': pl.Int64,
+        'Upgrade_CPC': pl.Int64,
+        'CHG_Period': pl.Int64,
+        'CHG_Price': pl.Float64
+    })
+
+    full_map = pl.concat([cpc_map, unknown_mapping])
+
+    joined = counters.join(full_map, on='cpc', how='left')
+
+    joined = joined.with_columns([
+        pl.col('service_name').fill_null('UNKNOWN'),
+        pl.col('tme_category').fill_null(''),
+        pl.col('Free_CPC').fill_null(0),
+        pl.col('Free_Period').fill_null(0),
+        pl.col('Upgrade_CPC').fill_null(0),
+        pl.col('CHG_Period').fill_null(0),
+        pl.col('CHG_Price').fill_null(0.0)
+    ])
+
+    joined = joined.filter(
+        ~pl.col('service_name').str.to_lowercase().str.contains('nubico') &
+        ~pl.col('service_name').str.to_lowercase().str.contains('movistar apple music')
+    )
+
+    aggregated = joined.group_by(['date', 'service_name', 'tme_category']).agg([
+        pl.col('cpc').unique().sort().alias('cpcs'),
+        pl.col('act_count').sum(),
+        pl.col('act_free').sum(),
+        pl.col('act_pay').sum(),
+        pl.col('upg_count').sum(),
+        pl.col('reno_count').sum(),
+        pl.col('dct_count').sum(),
+        pl.col('upg_dct_count').sum(),
+        pl.col('cnr_count').sum(),
+        pl.col('ppd_count').sum(),
+        pl.col('rfnd_count').sum(),
+        pl.col('rfnd_amount').sum().round(2),
+        pl.col('rev').sum().round(2),
+        pl.col('Free_CPC').first(),
+        pl.col('Free_Period').first(),
+        pl.col('Upgrade_CPC').first(),
+        pl.col('CHG_Period').first(),
+        pl.col('CHG_Price').first()
+    ]).sort(['date', 'service_name'])
+
+    aggregated = aggregated.with_columns([
+        pl.col('cpcs').cast(pl.List(pl.Utf8)).list.join(', ')
+    ])
+
+    aggregated = aggregated.select([
+        'date',
+        'service_name',
+        'tme_category',
+        'cpcs',
+        'Free_CPC',
+        'Free_Period',
+        'Upgrade_CPC',
+        'CHG_Period',
+        'CHG_Price',
+        'act_count',
+        'act_free',
+        'act_pay',
+        'upg_count',
+        'reno_count',
+        'dct_count',
+        'upg_dct_count',
+        'cnr_count',
+        'ppd_count',
+        'rfnd_count',
+        'rfnd_amount',
+        'rev'
+    ])
+
+    return aggregated, unmapped_cpcs

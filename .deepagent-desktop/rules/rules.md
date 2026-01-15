@@ -201,10 +201,11 @@ CVAS_BEYOND_DATA/
 }
 ```
 
-#### Counters_Service.csv (14 columns):
+#### Counters_Service.csv (21 columns):
 ```
-date, service_name, tme_category, cpcs, act_count, act_free, act_pay,
-reno_count, dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
+date, service_name, tme_category, cpcs, Free_CPC, Free_Period, Upgrade_CPC,
+CHG_Period, CHG_Price, act_count, act_free, act_pay, upg_count, reno_count,
+dct_count, upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
 ```
 
 **Execution Modes:**
