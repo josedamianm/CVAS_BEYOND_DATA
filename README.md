@@ -539,13 +539,14 @@ bash 4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force
 ```
 
 **Output Files:**
-- `Counters/Counters_CPC.parquet` - CPC-level counters (historical, 13 columns)
-- `Counters/Counters_Service.csv` - Service-level counters (historical, 14 columns)
+- `Counters/Counters_CPC.parquet` - CPC-level counters (historical, 15 columns)
+- `Counters/Counters_Service.csv` - Service-level counters (historical, 21 columns)
 
 **Counter Columns:**
-- Transaction counts: `act_count`, `act_free`, `act_pay`, `reno_count`, `dct_count`, `cnr_count`, `ppd_count`, `rfnd_count`
+- Transaction counts: `act_count` (non-upgrade), `act_free`, `act_pay`, `upg_count` (upgrades), `reno_count`, `dct_count`, `upg_dct_count` (upgrade deactivations), `cnr_count`, `ppd_count`, `rfnd_count`
 - Financial metrics: `rfnd_amount`, `rev` (total revenue)
-- Metadata: `date`, `cpc`/`service_name`, `last_updated`
+- Service metadata (Service CSV only): `Free_CPC`, `Free_Period`, `Upgrade_CPC`, `CHG_Period`, `CHG_Price`
+- Metadata: `date`, `cpc`/`service_name`, `tme_category`, `cpcs`, `last_updated`
 
 **Execution Modes:**
 - **Daily mode**: Processes yesterday's data (default)
@@ -666,16 +667,18 @@ grep "$(date +%Y-%m-%d)" Logs/*.log
 
 ### Counter Schemas
 
-#### Counters_CPC.parquet (13 columns)
+#### Counters_CPC.parquet (15 columns)
 | Column | Type | Description |
 |--------|------|-------------|
 | `date` | Date | Transaction date |
 | `cpc` | Int64 | Content Provider Code |
-| `act_count` | Int64 | Total activations |
-| `act_free` | Int64 | Free activations (rev=0) |
-| `act_pay` | Int64 | Paid activations (rev>0) |
+| `act_count` | Int64 | Non-upgrade activations (channel_act != 'UPGRADE') |
+| `act_free` | Int64 | Free non-upgrade activations (rev=0, channel_act != 'UPGRADE') |
+| `act_pay` | Int64 | Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE') |
+| `upg_count` | Int64 | Upgrade activations (channel_act == 'UPGRADE') |
 | `reno_count` | Int64 | Renewal count |
 | `dct_count` | Int64 | Deactivation count |
+| `upg_dct_count` | Int64 | Upgrade deactivations (channel_dct == 'UPGRADE') |
 | `cnr_count` | Int64 | Cancellation count |
 | `ppd_count` | Int64 | Prepaid transaction count |
 | `rfnd_count` | Int64 | Refund count |
@@ -683,18 +686,25 @@ grep "$(date +%Y-%m-%d)" Logs/*.log
 | `rev` | Float64 | Total revenue (2 decimals) |
 | `last_updated` | Datetime | Last update timestamp |
 
-#### Counters_Service.csv (14 columns)
+#### Counters_Service.csv (21 columns)
 | Column | Type | Description |
 |--------|------|-------------|
 | `date` | Date | Transaction date |
 | `service_name` | String | Service name from MASTERCPC |
 | `tme_category` | String | TME category |
 | `cpcs` | String | Comma-separated list of CPCs |
-| `act_count` | Int64 | Total activations |
-| `act_free` | Int64 | Free activations (rev=0) |
-| `act_pay` | Int64 | Paid activations (rev>0) |
+| `Free_CPC` | Int64 | Free CPC from MASTERCPC |
+| `Free_Period` | Int64 | Free period from MASTERCPC |
+| `Upgrade_CPC` | Int64 | Upgrade CPC from MASTERCPC |
+| `CHG_Period` | Int64 | Charge period from MASTERCPC |
+| `CHG_Price` | Float64 | Charge price from MASTERCPC |
+| `act_count` | Int64 | Non-upgrade activations (channel_act != 'UPGRADE') |
+| `act_free` | Int64 | Free non-upgrade activations (rev=0, channel_act != 'UPGRADE') |
+| `act_pay` | Int64 | Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE') |
+| `upg_count` | Int64 | Upgrade activations (channel_act == 'UPGRADE') |
 | `reno_count` | Int64 | Renewal count |
 | `dct_count` | Int64 | Deactivation count |
+| `upg_dct_count` | Int64 | Upgrade deactivations (channel_dct == 'UPGRADE') |
 | `cnr_count` | Int64 | Cancellation count |
 | `ppd_count` | Int64 | Prepaid transaction count |
 | `rfnd_count` | Int64 | Refund count |
@@ -706,6 +716,10 @@ grep "$(date +%Y-%m-%d)" Logs/*.log
 - **Nubico filtering**: Excludes services containing "nubico" (case-insensitive)
 - **Auto-discovery**: Backfill mode finds all missing dates automatically
 - **Force mode**: Recompute existing dates with `--force` flag
+- **Upgrade separation**: Upgrades are tracked separately from regular activations
+  - `act_count` excludes upgrades (channel_act != 'UPGRADE')
+  - `upg_count` contains only upgrades (channel_act == 'UPGRADE')
+  - Total activations = `act_count` + `upg_count`
 
 ### Parquet Partitioning Strategy
 

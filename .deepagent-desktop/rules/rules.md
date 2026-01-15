@@ -187,11 +187,13 @@ CVAS_BEYOND_DATA/
 {
     'date': pl.Date,
     'cpc': pl.Int64,
-    'act_count': pl.Int64,      # Total activations
-    'act_free': pl.Int64,       # Free activations (rev=0)
-    'act_pay': pl.Int64,        # Paid activations (rev>0)
+    'act_count': pl.Int64,      # Non-upgrade activations (channel_act != 'UPGRADE')
+    'act_free': pl.Int64,       # Free non-upgrade activations (rev=0, channel_act != 'UPGRADE')
+    'act_pay': pl.Int64,        # Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE')
+    'upg_count': pl.Int64,      # Upgrade activations (channel_act == 'UPGRADE')
     'reno_count': pl.Int64,
     'dct_count': pl.Int64,
+    'upg_dct_count': pl.Int64,  # Upgrade deactivations (channel_dct == 'UPGRADE')
     'cnr_count': pl.Int64,
     'ppd_count': pl.Int64,
     'rfnd_count': pl.Int64,
@@ -208,6 +210,14 @@ CHG_Period, CHG_Price, act_count, act_free, act_pay, upg_count, reno_count,
 dct_count, upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
 ```
 
+**Column Definitions:**
+- `act_count`: Non-upgrade activations (excludes channel_act='UPGRADE')
+- `act_free`: Free non-upgrade activations (rev=0, channel_act != 'UPGRADE')
+- `act_pay`: Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE')
+- `upg_count`: Upgrade activations (channel_act == 'UPGRADE')
+- `upg_dct_count`: Upgrade deactivations (channel_dct == 'UPGRADE')
+- `Free_CPC`, `Free_Period`, `Upgrade_CPC`, `CHG_Period`, `CHG_Price`: Service metadata from MASTERCPC.csv
+
 **Execution Modes:**
 - **Daily mode** (default): Processes yesterday's data
 - **Backfill mode** (`--backfill`): Processes all missing dates from transaction data
@@ -219,6 +229,7 @@ dct_count, upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
 - ❌ Remove backward compatibility for existing counter files
 - ❌ Change column order (breaks downstream analytics)
 - ❌ Include Nubico services in counter aggregations
+- ❌ Count upgrades in act_count (they are separate in upg_count)
 
 **DO:**
 - ✅ Run counter system after `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` completes
@@ -228,6 +239,8 @@ dct_count, upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
 - ✅ Round monetary values (`rev`, `rfnd_amount`) to 2 decimals
 - ✅ Filter out services containing "nubico" (case-insensitive) in service aggregation
 - ✅ Handle duplicate dates gracefully (merge_counters removes existing date before adding new)
+- ✅ Exclude upgrades from act_count, act_free, act_pay (filter channel_act != 'UPGRADE')
+- ✅ Track upgrades separately in upg_count and upg_dct_count
 
 ---
 
