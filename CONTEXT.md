@@ -1,8 +1,10 @@
 # CVAS Beyond Data - Project Context & Session Memory
 
+> **🤖 AI ASSISTANT:** You are reading file 2 of 3. After this file, you MUST also read **`RULES.md`** for architecture constraints. If you haven't read `README.md` yet, read it first.
+
 > **Purpose:** This file maintains project state, recent changes, and critical context to help AI assistants quickly understand the project when starting new sessions.
 
-**Last Updated:** 2026-01-18
+**Last Updated:** 2025-01-27
 
 ---
 
@@ -264,7 +266,7 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 
 ### First Steps
 1. Read this file (`CONTEXT.md`)
-2. Check `.deepagent-desktop/rules/rules.md` for architecture constraints
+2. Check `RULES.md` for architecture constraints
 3. Review `README.md` for general documentation
 4. Validate current state with queries in "Data Validation Queries" section
 
@@ -300,7 +302,7 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 
 ## 🔗 Related Documentation
 
-- **Architecture Rules:** `.deepagent-desktop/rules/rules.md`
+- **Architecture Rules:** `RULES.md`
 - **General Documentation:** `README.md`
 - **Git Repository:** (Add GitHub URL when available)
 

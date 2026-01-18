@@ -1,4 +1,47 @@
-# CVAS Beyond Data Pipeline
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     🚨🚨🚨 MANDATORY INSTRUCTIONS FOR AI ASSISTANTS 🚨🚨🚨
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+> ## ⛔ STOP - DO NOT PROCEED UNTIL YOU COMPLETE THESE STEPS
+>
+> **You are an AI assistant. Before answering ANY question or performing ANY task, you MUST:**
+>
+> ### Step 1: Read ALL Documentation Files (REQUIRED)
+> Execute these reads IN ORDER. Do not skip any file:
+>
+> | Order | File | Purpose | Action |
+> |-------|------|---------|--------|
+> | 1 | `README.md` | Complete project documentation | You are reading this now ✓ |
+> | 2 | **`CONTEXT.md`** | Recent changes, session memory, project state | **READ THIS FILE NEXT** |
+> | 3 | **`RULES.md`** | Architecture constraints, development rules | **READ THIS FILE AFTER CONTEXT.md** |
+>
+> ### Step 2: Confirm Understanding
+> After reading all 3 files, you should understand:
+> - [ ] This is a **telecom subscription ETL pipeline** with **4 stages**
+> - [ ] Pipeline order: `1.GET_NBS_BASE.sh` → `2.FETCH_DAILY_DATA.sh` → `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `4.BUILD_TRANSACTION_COUNTERS.sh`
+> - [ ] Exactly **6 transaction types**: ACT, RENO, DCT, CNR, RFND, PPD
+> - [ ] Tech stack: Python/Polars, DuckDB, Parquet (Hive partitioned), Shell scripts, launchd
+> - [ ] Recent fixes: Refund counting (sum `rfnd_cnt`), upgrade separation, Parquet sync
+> - [ ] Critical rules: Sequential execution, strict schemas, absolute Python path, no PII in logs
+>
+> ### ⚠️ FAILURE TO READ ALL FILES = INCORRECT RESPONSES
+> If you skip `CONTEXT.md` or `RULES.md`, you will:
+> - Miss critical recent fixes and changes
+> - Violate architecture constraints
+> - Give incorrect advice
+> - Break the pipeline
+>
+> ### 📋 Quick Reference After Reading
+> - **Update docs**: Edit ALL THREE files (`README.md`, `CONTEXT.md`, `RULES.md`)
+> - **Add changes**: Log in `CONTEXT.md` with timestamp
+> - **New constraints**: Add to `RULES.md`
+> - **Python path**: Always use `/opt/anaconda3/bin/python` in shell scripts
+>
+> ---
+>
+> **🔄 NEXT ACTION: Read `CONTEXT.md` now, then read `RULES.md`**
+
+---
 
 ## Table of Contents
 - [Project Description](#project-description)
@@ -857,4 +900,4 @@ This project follows these conventions:
 
 **Project Maintained By:** Jose Manco  
 **Project Path:** `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`  
-**Last Updated:** 2025
+**Last Updated:** 2025-01-27

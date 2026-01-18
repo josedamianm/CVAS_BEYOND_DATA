@@ -1,5 +1,7 @@
 # CVAS Beyond Data - AI Development Rules & Context
 
+> **🤖 AI ASSISTANT:** You are reading file 3 of 3. This is the final required file. If you haven't read `README.md` and `CONTEXT.md` first, GO BACK and read them now. These rules are **NON-NEGOTIABLE**.
+
 > **Purpose:** This document defines critical rules, constraints, and context for AI assistants when modifying code in the CVAS Beyond Data pipeline. Read the `README.md` for general project documentation.
 
 ---
@@ -1062,7 +1064,7 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
 
 ---
 
-**Last Updated:** 2026-01-17
+**Last Updated:** 2025-01-27
 **For General Documentation:** See `README.md`
 **For Project Context & History:** See `CONTEXT.md`
 
@@ -1082,12 +1084,6 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
 | Python Dependencies | ✅ COMPLIANT | Exact versions pinned |
 | Category Mapping | ✅ COMPLIANT | Business logic preserved |
 | NBS_BASE Immutability | ✅ COMPLIANT | Historical files untouched |
-| PII Protection | ✅ COMPLIANT | No PII in pipeline logs, allowed in manual query scripts |
-| Git Ignore | ✅ COMPLIANT | Data directories excluded |
-| Counter System | ✅ COMPLIANT | Nubico filtering ✓, Idempotent updates ✓, Force mode ✓ |
-| Refund Counting | ✅ COMPLIANT | Sum `rfnd_cnt` column, not row count |
-| Parquet Sync | ✅ COMPLIANT | Synchronized with source CSVs |
-
 | Rule Category | Status | Notes |
 |---------------|--------|-------|
 | Sequential Pipeline | ✅ COMPLIANT | 1→2→3→4 order enforced (4 is independent) |
@@ -1106,7 +1102,8 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
 | NBS_BASE Immutability | ✅ COMPLIANT | Historical files untouched |
 | PII Protection | ✅ COMPLIANT | No PII in pipeline logs, allowed in manual query scripts |
 | Git Ignore | ✅ COMPLIANT | Data directories excluded |
-| Counter System | ✅ COMPLIANT | Nubico filtering ✓, Idempotent updates ✓, Force mode ✓ |
+| Counter System | ✅ COMPLIANT | Nubico filtering ✓, Idempotent updates ✓, Force mode ✓, Upgrade separation ✓ |
 | Refund Counting | ✅ COMPLIANT | Sum `rfnd_cnt` column, not row count |
 | Deactivation Filtering | ✅ COMPLIANT | Exclude upgrades from `dct_count` |
 | Parquet Data Integrity | ✅ COMPLIANT | Regenerated from source CSVs when needed |
+| Upgrade Separation | ✅ COMPLIANT | Upgrades tracked separately in `upg_count` and `upg_dct_count` |
