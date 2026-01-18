@@ -80,6 +80,18 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
 
             upg_counts = df.filter(pl.col('channel_act') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
             tx_upg[tx_type] = {row['cpc']: row['count'] for row in upg_counts.iter_rows(named=True)}
+        elif tx_type == 'dct' and 'channel_dct' in df.columns:
+            non_upgrade_df = df.filter(pl.col('channel_dct') != 'UPGRADE')
+            counts = non_upgrade_df.group_by('cpc').agg(pl.len().alias('count'))
+            tx_counts[tx_type] = {row['cpc']: row['count'] for row in counts.iter_rows(named=True)}
+
+            upg_dct_counts = df.filter(pl.col('channel_dct') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
+            tx_upg_dct[tx_type] = {row['cpc']: row['count'] for row in upg_dct_counts.iter_rows(named=True)}
+            tx_upg[tx_type] = {}
+        elif tx_type == 'rfnd' and 'rfnd_cnt' in df.columns:
+            counts = df.group_by('cpc').agg(pl.col('rfnd_cnt').sum().alias('count'))
+            tx_counts[tx_type] = {row['cpc']: row['count'] for row in counts.iter_rows(named=True)}
+            tx_upg[tx_type] = {}
         else:
             counts = df.group_by('cpc').agg(pl.len().alias('count'))
             tx_counts[tx_type] = {row['cpc']: row['count'] for row in counts.iter_rows(named=True)}
@@ -100,10 +112,10 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
             tx_act_free[tx_type] = {}
             tx_act_pay[tx_type] = {}
 
-        if tx_type == 'dct' and 'channel_dct' in df.columns:
+        if tx_type == 'dct' and 'channel_dct' in df.columns and tx_type not in tx_upg_dct:
             upg_dct_counts = df.filter(pl.col('channel_dct') == 'UPGRADE').group_by('cpc').agg(pl.len().alias('count'))
             tx_upg_dct[tx_type] = {row['cpc']: row['count'] for row in upg_dct_counts.iter_rows(named=True)}
-        else:
+        elif tx_type != 'dct':
             tx_upg_dct[tx_type] = {}
 
         if 'rev' in df.columns:

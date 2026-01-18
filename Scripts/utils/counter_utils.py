@@ -54,6 +54,8 @@ def load_transactions_for_date(
             cols_to_select.append('rev')
         if 'rfnd_amount' in df.columns:
             cols_to_select.append('rfnd_amount')
+        if 'rfnd_cnt' in df.columns:
+            cols_to_select.append('rfnd_cnt')
         if 'channel_act' in df.columns:
             cols_to_select.append('channel_act')
         if 'channel_dct' in df.columns:
