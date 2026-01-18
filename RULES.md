@@ -1064,26 +1064,10 @@ python3 -c "import pyarrow.parquet as pq; print(pq.read_schema('Counters/transac
 
 ---
 
-**Last Updated:** 2025-01-27
+**Last Updated:** 2025-01-28
 **For General Documentation:** See `README.md`
 **For Project Context & History:** See `CONTEXT.md`
 
-| Rule Category | Status | Notes |
-|---------------|--------|-------|
-| Sequential Pipeline | ✅ COMPLIANT | 1→2→3→4 order enforced (4 is independent) |
-| Six Transaction Types | ✅ COMPLIANT | All 6 types consistently processed |
-| Directory Structure | ✅ COMPLIANT | Immutable structure maintained |
-| Schema Enforcement | ✅ COMPLIANT | Strict schemas in all processors |
-| Hive Partitioning | ✅ COMPLIANT | All transaction Parquet files partitioned |
-| Absolute Python Path | ✅ COMPLIANT | All shell scripts use `/opt/anaconda3/bin/python` |
-| Path Management | ✅ COMPLIANT | Relative paths from project root |
-| Cross-Platform Date | ✅ COMPLIANT | macOS and Linux support |
-| Log Rotation | ✅ COMPLIANT | 15-day retention, all scripts |
-| Error Handling | ✅ COMPLIANT | Non-zero exit codes, timestamped logs |
-| SQL Query Management | ✅ COMPLIANT | Complex SQL in `sql/` directory |
-| Python Dependencies | ✅ COMPLIANT | Exact versions pinned |
-| Category Mapping | ✅ COMPLIANT | Business logic preserved |
-| NBS_BASE Immutability | ✅ COMPLIANT | Historical files untouched |
 | Rule Category | Status | Notes |
 |---------------|--------|-------|
 | Sequential Pipeline | ✅ COMPLIANT | 1→2→3→4 order enforced (4 is independent) |

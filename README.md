@@ -6,7 +6,7 @@
 >
 > **You are an AI assistant. Before answering ANY question or performing ANY task, you MUST:**
 >
-> ### Step 1: Read ALL Documentation Files (REQUIRED)
+> ### 📖 Step 1: Read ALL Documentation Files (REQUIRED)
 > Execute these reads IN ORDER. Do not skip any file:
 >
 > | Order | File | Purpose | Action |
@@ -15,7 +15,7 @@
 > | 2 | **`CONTEXT.md`** | Recent changes, session memory, project state | **READ THIS FILE NEXT** |
 > | 3 | **`RULES.md`** | Architecture constraints, development rules | **READ THIS FILE AFTER CONTEXT.md** |
 >
-> ### Step 2: Confirm Understanding
+> ### ✅ Step 2: Confirm Understanding
 > After reading all 3 files, you should understand:
 > - [ ] This is a **telecom subscription ETL pipeline** with **4 stages**
 > - [ ] Pipeline order: `1.GET_NBS_BASE.sh` → `2.FETCH_DAILY_DATA.sh` → `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `4.BUILD_TRANSACTION_COUNTERS.sh`
@@ -31,11 +31,46 @@
 > - Give incorrect advice
 > - Break the pipeline
 >
-> ### 📋 Quick Reference After Reading
-> - **Update docs**: Edit ALL THREE files (`README.md`, `CONTEXT.md`, `RULES.md`)
-> - **Add changes**: Log in `CONTEXT.md` with timestamp
-> - **New constraints**: Add to `RULES.md`
-> - **Python path**: Always use `/opt/anaconda3/bin/python` in shell scripts
+> ---
+>
+> ## 🔄 SESSION MANAGEMENT COMMANDS
+>
+> ### ▶️ START SESSION: `"Read @./README.md"`
+> When user sends this command:
+> 1. Read `README.md` (this file)
+> 2. Read `CONTEXT.md`
+> 3. Read `RULES.md`
+> 4. Confirm: *"I've read all documentation. Ready to assist with CVAS Beyond Data pipeline."*
+>
+> ### ⏹️ END SESSION: `"End session"` or `"Close session"`
+> When user sends this command, you MUST:
+>
+> **1. Update `CONTEXT.md`:**
+> - Add new section under `## 📝 Session Notes` with format:
+>   ```markdown
+>   ### Session: [DATE] - [Brief Title]
+>   **Changes Made:**
+>   - [List each change/fix/addition]
+>
+>   **Files Modified:**
+>   - [List files with brief description]
+>
+>   **Validation:**
+>   - [Any tests run or validations performed]
+>   ```
+> - Update `**Last Updated:**` date at top
+>
+> **2. Update `RULES.md` (if applicable):**
+> - Add new rules/constraints discovered during session
+> - Update compliance status table if needed
+> - Update `**Last Updated:**` date at top
+>
+> **3. Update `README.md` (if applicable):**
+> - Update if features, schemas, or behavior changed
+> - Update `**Last Updated:**` date at top
+>
+> **4. Confirm to user:**
+> *"Session documented. Updated: [list files updated]. Summary: [1-2 sentence summary]"*
 >
 > ---
 >
@@ -898,6 +933,6 @@ This project follows these conventions:
 
 ---
 
-**Project Maintained By:** Jose Manco  
-**Project Path:** `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`  
-**Last Updated:** 2025-01-27
+**Project Maintained By:** Jose Manco
+**Project Path:** `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
+**Last Updated:** 2025-01-28

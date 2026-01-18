@@ -4,7 +4,7 @@
 
 > **Purpose:** This file maintains project state, recent changes, and critical context to help AI assistants quickly understand the project when starting new sessions.
 
-**Last Updated:** 2025-01-27
+**Last Updated:** 2025-01-28
 
 ---
 
@@ -280,23 +280,54 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 
 ## 📝 Session Notes
 
+> **🤖 AI ASSISTANT:** When user says `"End session"` or `"Close session"`, add a new session entry below using this format:
+> ```markdown
+> ### Session: [DATE] - [Brief Title]
+> **Changes Made:**
+> - [List each change/fix/addition]
+>
+> **Files Modified:**
+> - [List files with brief description]
+>
+> **Validation:**
+> - [Any tests run or validations performed]
+> ```
+
+### Session: Jan 28, 2025 - AI Documentation Instructions Enhancement
+**Changes Made:**
+- Rewrote AI assistant instructions in `README.md` to be more explicit and forceful
+- Added `⛔ STOP - DO NOT PROCEED` command at the top
+- Added numbered mandatory steps with table for reading all 3 documentation files
+- Added checklist of required understanding before proceeding
+- Added consequences warning for skipping documentation files
+- Added SESSION MANAGEMENT COMMANDS section with start/end session workflows
+- Added cross-reference indicators ("file 2 of 3", "file 3 of 3") to `CONTEXT.md` and `RULES.md`
+- Added session notes template with AI instructions in `CONTEXT.md`
+
+**Files Modified:**
+- `README.md` - Complete rewrite of AI instructions header, added session management commands
+- `CONTEXT.md` - Added file indicator, session notes template, session commands reference
+- `RULES.md` - Added file indicator with cross-reference to other docs
+
+**Validation:**
+- Instructions tested and confirmed to be more explicit and actionable
+- Cross-references between all 3 files ensure models follow complete flow
+
 ### Session: Jan 18, 2026 - Refund Count Fix
-**Discovered:**
+**Changes Made:**
 - `rfnd_count` was undercounting by ~90% for Beauty & Health
 - Parquet files were outdated (missing 436 rows for Dec 2025)
-
-**Fixed:**
 - Changed `rfnd_count` logic to sum `rfnd_cnt` column
 - Regenerated all parquet files from source CSVs
 - Rebuilt all counters with `--backfill --force`
 
-**Validated:**
-- Beauty & Health Dec 2025: 7,001 refunds, €15,033.93 ✅
-- All categories match manual counts ✅
-
 **Files Modified:**
 - `Scripts/05_build_counters.py`
 - `Scripts/utils/counter_utils.py`
+
+**Validation:**
+- Beauty & Health Dec 2025: 7,001 refunds, €15,033.93 ✅
+- All categories match manual counts ✅
 
 ---
 
