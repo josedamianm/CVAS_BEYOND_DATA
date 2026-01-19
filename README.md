@@ -1,80 +1,95 @@
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     🚨🚨🚨 MANDATORY INSTRUCTIONS FOR AI ASSISTANTS 🚨🚨🚨
-     ═══════════════════════════════════════════════════════════════════════════ -->
+<!--
+═══════════════════════════════════════════════════════════════════════════
+    🚨🚨🚨 MANDATORY INSTRUCTIONS FOR AI ASSISTANTS 🚨🚨🚨
+═══════════════════════════════════════════════════════════════════════════
+-->
 
-> ## ⛔ STOP - DO NOT PROCEED UNTIL YOU COMPLETE THESE STEPS
->
-> **You are an AI assistant. Before answering ANY question or performing ANY task, you MUST:**
->
-> ### 📖 Step 1: Read ALL Documentation Files (REQUIRED)
-> Execute these reads IN ORDER. Do not skip any file:
->
-> | Order | File | Purpose | Action |
-> |-------|------|---------|--------|
-> | 1 | `README.md` | Complete project documentation | You are reading this now ✓ |
-> | 2 | **`CONTEXT.md`** | Recent changes, session memory, project state | **READ THIS FILE NEXT** |
-> | 3 | **`RULES.md`** | Architecture constraints, development rules | **READ THIS FILE AFTER CONTEXT.md** |
->
-> ### ✅ Step 2: Confirm Understanding
-> After reading all 3 files, you should understand:
-> - [ ] This is a **telecom subscription ETL pipeline** with **4 stages**
-> - [ ] Pipeline order: `1.GET_NBS_BASE.sh` → `2.FETCH_DAILY_DATA.sh` → `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `4.BUILD_TRANSACTION_COUNTERS.sh`
-> - [ ] Exactly **6 transaction types**: ACT, RENO, DCT, CNR, RFND, PPD
-> - [ ] Tech stack: Python/Polars, DuckDB, Parquet (Hive partitioned), Shell scripts, launchd
-> - [ ] Recent fixes: Refund counting (sum `rfnd_cnt`), upgrade separation, Parquet sync
-> - [ ] Critical rules: Sequential execution, strict schemas, absolute Python path, no PII in logs
->
-> ### ⚠️ FAILURE TO READ ALL FILES = INCORRECT RESPONSES
-> If you skip `CONTEXT.md` or `RULES.md`, you will:
-> - Miss critical recent fixes and changes
-> - Violate architecture constraints
-> - Give incorrect advice
-> - Break the pipeline
->
-> ---
->
-> ## 🔄 SESSION MANAGEMENT COMMANDS
->
-> ### ▶️ START SESSION: `"Read @./README.md"`
-> When user sends this command:
-> 1. Read `README.md` (this file)
-> 2. Read `CONTEXT.md`
-> 3. Read `RULES.md`
-> 4. Confirm: *"I've read all documentation. Ready to assist with CVAS Beyond Data pipeline."*
->
-> ### ⏹️ END SESSION: `"End session"` or `"Close session"`
-> When user sends this command, you MUST:
->
-> **1. Update `CONTEXT.md`:**
-> - Add new section under `## 📝 Session Notes` with format:
->   ```markdown
->   ### Session: [DATE] - [Brief Title]
->   **Changes Made:**
->   - [List each change/fix/addition]
->
->   **Files Modified:**
->   - [List files with brief description]
->
->   **Validation:**
->   - [Any tests run or validations performed]
->   ```
-> - Update `**Last Updated:**` date at top
->
-> **2. Update `RULES.md` (if applicable):**
-> - Add new rules/constraints discovered during session
-> - Update compliance status table if needed
-> - Update `**Last Updated:**` date at top
->
-> **3. Update `README.md` (if applicable):**
-> - Update if features, schemas, or behavior changed
-> - Update `**Last Updated:**` date at top
->
-> **4. Confirm to user:**
-> *"Session documented. Updated: [list files updated]. Summary: [1-2 sentence summary]"*
->
-> ---
->
-> **🔄 NEXT ACTION: Read `CONTEXT.md` now, then read `RULES.md`**
+## ⛔ STOP - DO NOT PROCEED UNTIL YOU COMPLETE THESE STEPS
+
+**You are an AI assistant. Before answering ANY question or performing ANY task, you MUST:**
+
+### 📖 Step 1: Read ALL Documentation Files (REQUIRED)
+Execute these reads IN ORDER. Do not skip any file:
+
+| Order | File | Purpose | Action |
+|-------|------|---------|--------|
+| 1 | `README.md` | Project overview, orchestration protocol | You are reading this now ✓ |
+| 2 | **`.ai-context.md`** | Complete project context, rules, history | **READ THIS FILE NEXT** |
+
+### ✅ Step 2: Confirm Understanding
+After reading both files, you should understand:
+- [ ] This is a **telecom subscription ETL pipeline** with **4 stages**
+- [ ] Pipeline order: `1.GET_NBS_BASE.sh` → `2.FETCH_DAILY_DATA.sh` → `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `4.BUILD_TRANSACTION_COUNTERS.sh`
+- [ ] Exactly **6 transaction types**: ACT, RENO, DCT, CNR, RFND, PPD
+- [ ] Tech stack: Python/Polars, DuckDB, Parquet (Hive partitioned), Shell scripts, launchd
+- [ ] Recent fixes: Refund counting (sum `rfnd_cnt`), upgrade separation, Parquet sync
+- [ ] Critical rules: Sequential execution, strict schemas, absolute Python path, no PII in logs
+- [ ] Refund counts: ALWAYS sum `rfnd_cnt`, NEVER count rows
+- [ ] Deactivations: Exclude upgrades (`channel_dct != 'UPGRADE'`)
+- [ ] Activations: Exclude upgrades (`channel_act != 'UPGRADE'`)
+- [ ] Counter system: Independent pipeline, runs after Stage 3
+
+### ⚠️ FAILURE TO READ `.ai-context.md` = INCORRECT RESPONSES
+If you skip `.ai-context.md`, you will:
+- Miss critical recent fixes and changes
+- Violate architecture constraints (7 non-negotiable rules)
+- Give incorrect advice about refund counting
+- Break the sequential pipeline
+- Violate data governance and PII protection rules
+
+### 💾 Step 3: End-of-Session Protocol (MANDATORY)
+When user says **"Update documentation before closing"** or session ends, you MUST:
+1. Update `.ai-context.md` → "Session History" section with today's changes
+2. Update `.ai-context.md` → "Open Issues" section
+3. Update `.ai-context.md` → "Last Updated" date at top
+4. Update `README.md` → "Last Updated" date below (line after this section)
+5. Save both files
+
+**DO NOT skip this step. Documentation synchronization is critical for session continuity.**
+
+---
+
+# CVAS Beyond Data
+
+> **Last Updated**: 2025-01-19
+
+---
+
+## 🤖 AI AGENT ORCHESTRATION (DETAILED PROTOCOL)
+
+**This section is for AI agents only. Human users can skip to "Project Description" below.**
+
+### 📖 START OF SESSION CHECKLIST
+- [ ] Read `README.md` (this file) - mandatory AI instructions at top
+- [ ] Read `.ai-context.md` - complete project context
+- [ ] Check `.ai-context.md` → "Session History" for recent changes
+- [ ] Check `.ai-context.md` → "Open Issues" for pending work
+- [ ] Confirm understanding of:
+  - 4-stage sequential pipeline (NEVER break order)
+  - 6 transaction types (NEVER change count)
+  - Refund counting: sum `rfnd_cnt` column (NOT row count)
+  - Deactivation/Activation counting: exclude upgrades
+  - Absolute Python path: `/opt/anaconda3/bin/python`
+  - No PII in logs (SECURITY)
+- [ ] Ready to proceed with user's request
+
+### 💾 END OF SESSION CHECKLIST
+When user says **"Update documentation before closing"** or session ends:
+- [ ] Update `.ai-context.md` → "Session History" section:
+  - Add new entry with date (YYYY-MM-DD)
+  - Summarize changes made this session
+  - List files modified
+  - Note any new issues discovered
+- [ ] Update `.ai-context.md` → "Open Issues" section:
+  - Add new issues discovered
+  - Mark resolved issues as completed
+  - Update status of in-progress issues
+- [ ] Update `.ai-context.md` → "Last Updated" date (line 3)
+- [ ] Update `README.md` → "Last Updated" date (line 52)
+- [ ] Save both files
+- [ ] Confirm to user: "Documentation updated and synchronized"
+
+**CRITICAL**: Do NOT skip end-of-session updates. Session continuity depends on accurate history.
 
 ---
 
@@ -99,623 +114,235 @@
 
 ### Key Features
 - **Automated Daily Execution**: Runs via macOS launchd scheduler (3 sequential jobs + 1 independent counter job).
-- **Sequential Pipeline**: Strict 3-stage orchestration ensuring data consistency (1.UserBase → 2.Fetch → 3.Process).
-- **Transaction Counters**: Independent counter system aggregating transaction metrics by CPC and Service.
-- **Columnar Storage**: Parquet format with Hive partitioning (`year_month=YYYY-MM`) for efficient querying.
-- **User Base Tracking**: Aggregates 1100+ daily snapshots of user base data.
-- **Secure Handling**: SSH/SCP data transfer with strict PII log masking.
-- **Auto-Maintenance**: 15-day log retention policy.
+- **6 Transaction Types**: ACT (activations), RENO (renewals), DCT (deactivations), CNR (cancellations), RFND (refunds), PPD (prepaid).
+- **Parquet Storage**: Hive-partitioned Parquet files for efficient querying.
+- **DuckDB Aggregation**: High-performance SQL aggregation for subscription lifecycle views.
+- **Transaction Counters**: Service-level and CPC-level daily aggregates.
+
+### Performance
+- **Daily Processing**: ~1.5 hours for full pipeline (8:05 AM - 9:30 AM)
+- **Historical Data**: 1123+ user base snapshots
+- **Transaction Volume**: Millions of records per month
+- **Counter Generation**: Service and CPC-level daily aggregates
 
 ---
 
 ## Architecture Overview
 
-### Four-Stage Pipeline
+### 4-Stage Sequential Pipeline
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ STAGE 1: USER BASE COLLECTION (8:05 AM)                        │
-│ Script: 1.GET_NBS_BASE.sh                                      │
-├────────────────────────────────────────────────────────────────┤
-│ 1. Download NBS_Base.csv from remote server via SCP           │
-│ 2. Validate downloaded file integrity                         │
-│ 3. Execute: Scripts/01_aggregate_user_base.py                 │
-│    → Process 1100+ CSV files in User_Base/NBS_BASE/           │
-│    → Generate: user_base_by_service.csv                       │
-│    → Generate: user_base_by_category.csv                      │
-└────────────────────────────────────────────────────────────────┘
-                              ↓
-┌────────────────────────────────────────────────────────────────┐
-│ STAGE 2: TRANSACTION DATA FETCH (8:25 AM)                      │
-│ Script: 2.FETCH_DAILY_DATA.sh                                  │
-├────────────────────────────────────────────────────────────────┤
-│ For each transaction type (6 types):                          │
-│ → Execute: Scripts/02_fetch_remote_nova_data.sh <type> <date> │
-│    → Connect to PostgreSQL via SSH tunnel                     │
-│    → Query transaction data for specified date                │
-│    → Save to Daily_Data/<date>/<TYPE>.csv                     │
-│                                                                │
-│ Transaction Types:                                            │
-│ • ACT  - Activations (new subscriptions + upgrades)          │
-│ • RENO - Renewals (subscription renewals)                    │
-│ • DCT  - Deactivations (service cancellations)               │
-│ • CNR  - Cancellations (user-initiated)                      │
-│ • RFND - Refunds (payment refunds)                           │
-│ • PPD  - Prepaid (prepaid transactions)                      │
-└────────────────────────────────────────────────────────────────┘
-                              ↓
-┌────────────────────────────────────────────────────────────────┐
-│ STAGE 3: PROCESSING & AGGREGATION (8:30 AM)                    │
-│ Script: 3.PROCESS_DAILY_AND_BUILD_VIEW.sh                      │
-├────────────────────────────────────────────────────────────────┤
-│ Step 1: Validate all 6 CSV files exist                        │
-│                                                                │
-│ Step 2: Execute Scripts/03_process_daily.py <date>            │
-│    → Convert CSV to Parquet format                            │
-│    → Apply Hive partitioning (year_month=YYYY-MM)             │
-│    → Save to Parquet_Data/transactions/<type>/                │
-│                                                                │
-│ Step 3: Execute Scripts/04_build_subscription_view.py         │
-│    → Load all Parquet transaction files                       │
-│    → Execute 241-line DuckDB SQL query                        │
-│    → Build comprehensive subscription lifecycle view          │
-│    → Save to Parquet_Data/aggregated/subscriptions.parquet    │
-└────────────────────────────────────────────────────────────────┘
-                              ↓
-┌────────────────────────────────────────────────────────────────┐
-│ STAGE 4: TRANSACTION COUNTERS (Independent)                    │
-│ Script: 4.BUILD_TRANSACTION_COUNTERS.sh                        │
-├────────────────────────────────────────────────────────────────┤
-│ Execute: Scripts/05_build_counters.py                         │
-│    → Load transaction Parquet files                           │
-│    → Aggregate counts by CPC and Service                      │
-│    → Calculate revenue and refund metrics                     │
-│    → Split activations (free vs paid)                         │
-│    → Save to Counters/Counters_CPC.parquet                    │
-│    → Save to Counters/Counters_Service.csv                    │
-│                                                                │
-│ Modes:                                                        │
-│ • Daily: Process yesterday's data (default)                  │
-│ • Backfill: Process all missing dates                        │
-│ • Force: Recompute existing dates                            │
-└────────────────────────────────────────────────────────────────┘
+1.GET_NBS_BASE.sh (8:05 AM)
+    ↓ Fetches user base snapshot from Nova
+2.FETCH_DAILY_DATA.sh (8:25 AM)
+    ↓ Fetches 6 transaction types (ACT, RENO, DCT, CNR, RFND, PPD)
+3.PROCESS_DAILY_AND_BUILD_VIEW.sh (8:30 AM)
+    ↓ Converts CSVs to Parquet, builds subscription view
+4.BUILD_TRANSACTION_COUNTERS.sh (9:30 AM)
+    ↓ Generates service and CPC-level counters (INDEPENDENT)
 ```
 
-### Data Flow Diagram
-
-```
-Remote PostgreSQL ──SSH──> Daily_Data (CSV) ──Python──> Parquet_Data (Columnar)
-                                                                  │
-NBS Server ──SCP──> User_Base/NBS_BASE ──Python──> user_base_by_*.csv
-                                                                  │
-                                                                  ↓
-                                                    DuckDB Aggregation
-                                                                  ↓
-                                              subscriptions.parquet (Final View)
-                                                                  │
-                                                                  ↓
-                                            Counter Aggregation (Independent)
-                                                                  ↓
-                                    ┌───────────────────────────────────────┐
-                                    │  Counters_CPC.parquet                 │
-                                    │  Counters_Service.csv                 │
-                                    └───────────────────────────────────────┘
-```
+**CRITICAL**: Stages 1-3 MUST run sequentially. Stage 4 is independent but requires Stage 3 completion.
 
 ---
 
 ## Technology Stack
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Language** | Python 3.x | Data processing and transformation |
-| **Data Processing** | Polars | High-performance DataFrame operations |
-| **Database** | DuckDB | In-process analytical queries |
-| **Storage Format** | Parquet + Hive Partitioning | Columnar storage for efficient analytics |
-| **Data Transfer** | PyArrow, Pandas | Serialization and compatibility |
-| **Orchestration** | Bash Shell Scripts | Pipeline coordination |
-| **Scheduling** | macOS launchd | Automated daily execution |
-| **Remote Access** | SSH/SCP | Secure data retrieval |
+- **Python 3.x**: Data processing and transformation
+- **Polars**: High-performance DataFrame library
+- **DuckDB**: In-process SQL OLAP database for aggregation
+- **PostgreSQL**: Remote Nova server (data source)
+- **Parquet**: Columnar storage format with SNAPPY compression
+- **Shell Scripts**: Bash for orchestration
+- **launchd**: macOS scheduler for automated execution
 
 ---
 
 ## Directory Structure
 
 ```
-CVAS_BEYOND_DATA/                         # Project root
-│
-├── 1.GET_NBS_BASE.sh                     # Stage 1 orchestrator
-├── 2.FETCH_DAILY_DATA.sh                 # Stage 2 orchestrator
-├── 3.PROCESS_DAILY_AND_BUILD_VIEW.sh     # Stage 3 orchestrator
-├── 4.BUILD_TRANSACTION_COUNTERS.sh       # Stage 4 orchestrator (independent)
-├── MASTERCPC.csv                         # Reference: Service/CPC mapping table
-├── requirements.txt                      # Python dependencies
-├── README.md                             # This file
-│
-├── Scripts/                              # Core processing scripts
-│   ├── 01_aggregate_user_base.py         # [ACTIVE] User base aggregation
-│   ├── 02_fetch_remote_nova_data.sh      # [ACTIVE] Remote data fetcher
-│   ├── 03_process_daily.py               # [ACTIVE] CSV to Parquet converter
-│   ├── 04_build_subscription_view.py     # [ACTIVE] Subscription aggregator
-│   ├── 05_build_counters.py              # [ACTIVE] Transaction counter builder
-│   ├── 00_convert_historical.py          # [HISTORICAL] One-time conversion
-│   │
-│   ├── utils/                            # Utility scripts
-│   │   ├── log_rotation.sh               # 15-day log retention manager
-│   │   └── counter_utils.py              # Counter system utilities
-│   │
-│   └── others/                           # Testing & validation scripts
-│       ├── check_transactions_parquet_data.py
-│       ├── check_subscriptions_parquet_data.py
-│       ├── check_users.py
-│       └── extract_music_subscriptions.py
-│
-├── sql/                                  # SQL queries
-│   └── build_subscription_view.sql       # 241-line DuckDB aggregation query
-│
-├── tests/                                # Unit tests
-│   └── test_counters.py                  # Counter system tests
-│
-├── Daily_Data/                           # [GIT-IGNORED] Temporary CSV staging
-│   └── YYYY-MM-DD/                       # Daily folders
-│       ├── ACT.csv
-│       ├── RENO.csv
-│       ├── DCT.csv
-│       ├── CNR.csv
-│       ├── RFND.csv
-│       └── PPD.csv
-│
-├── Parquet_Data/                         # [GIT-IGNORED] Columnar storage
-│   ├── transactions/                     # Partitioned by transaction type
-│   │   ├── act/year_month=YYYY-MM/*.parquet
-│   │   ├── reno/year_month=YYYY-MM/*.parquet
-│   │   ├── dct/year_month=YYYY-MM/*.parquet
-│   │   ├── cnr/year_month=YYYY-MM/*.parquet
-│   │   ├── ppd/year_month=YYYY-MM/*.parquet
-│   │   └── rfnd/year_month=__HIVE_DEFAULT_PARTITION__/*.parquet
-│   │
-│   └── aggregated/                       # Final processed data
-│       └── subscriptions.parquet         # Comprehensive subscription view
-│
-├── Counters/                             # [GIT-IGNORED] Transaction counters
-│   ├── Counters_CPC.parquet              # CPC-level counters (historical)
-│   └── Counters_Service.csv              # Service-level counters (historical)
-│
-├── User_Base/                            # User base data
-│   ├── NBS_BASE/                         # [GIT-IGNORED] 1100+ daily snapshots
-│   ├── user_base_by_service.csv          # [GIT-IGNORED] Aggregated by service
-│   └── user_base_by_category.csv         # [GIT-IGNORED] Aggregated by category
-│
-└── Logs/                                 # [GIT-IGNORED] Execution logs
-    ├── 1.GET_NBS_BASE.log
-    ├── 2.FETCH_DAILY_DATA.log
-    ├── 3.PROCESS_DAILY_AND_BUILD_VIEW.log
-    └── 4.BUILD_TRANSACTION_COUNTERS.log
+CVAS_BEYOND_DATA/
+├── README.md                            # This file (orchestrator + GitHub description)
+├── .ai-context.md                       # All project context (read this for details)
+├── 1.GET_NBS_BASE.sh                    # Stage 1: Fetch user base
+├── 2.FETCH_DAILY_DATA.sh                # Stage 2: Fetch transactions
+├── 3.PROCESS_DAILY_AND_BUILD_VIEW.sh    # Stage 3: Process & aggregate
+├── 4.BUILD_TRANSACTION_COUNTERS.sh      # Stage 4: Build counters
+├── Scripts/
+│   ├── 01_aggregate_user_base.py        # User base aggregation
+│   ├── 02_fetch_remote_nova_data.sh     # Remote data fetching
+│   ├── 03_process_daily.py              # Daily CSV to Parquet
+│   ├── 04_build_subscription_view.py    # Subscription lifecycle view
+│   ├── 05_build_counters.py             # Counter generation
+│   ├── 00_convert_historical.py         # Historical CSV to Parquet
+│   └── utils/
+│       ├── counter_utils.py             # Counter utilities
+│       └── log_rotation.sh              # Log management
+├── sql/
+│   └── build_subscription_view.sql      # DuckDB aggregation query
+├── MASTERCPC.csv                        # Service and CPC metadata
+├── Daily_Data/                          # Daily CSV files (gitignored)
+├── Parquet_Data/                        # Parquet storage (gitignored)
+│   └── transactions/
+│       ├── act/year_month=*/
+│       ├── reno/year_month=*/
+│       ├── dct/year_month=*/
+│       ├── cnr/year_month=*/
+│       ├── rfnd/year_month=*/
+│       └── ppd/year_month=*/
+├── User_Base/                           # User base snapshots (gitignored)
+├── Counters/                            # Counter outputs (gitignored)
+│   ├── Counters_CPC.parquet
+│   └── Counters_Service.csv
+└── Logs/                                # Pipeline logs (gitignored)
 ```
-
-### File Descriptions
-
-#### Orchestration Scripts (Root Level)
-| File | Purpose | Runs At | Dependencies |
-|------|---------|---------|--------------|
-| `1.GET_NBS_BASE.sh` | Downloads and aggregates user base | 8:05 AM | None |
-| `2.FETCH_DAILY_DATA.sh` | Fetches 6 transaction types | 8:25 AM | Script 1 must complete |
-| `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | Processes and builds views | 8:30 AM | Script 2 must complete |
-| `4.BUILD_TRANSACTION_COUNTERS.sh` | Builds transaction counters | 9:30 AM | Script 3 must complete (independent) |
-
-#### Active Pipeline Scripts (Scripts/)
-| Script | Called By | Purpose |
-|--------|-----------|---------|
-| `01_aggregate_user_base.py` | Script 1 (line 113) | Aggregates User_Base/NBS_BASE/*.csv files |
-| `02_fetch_remote_nova_data.sh` | Script 2 (line 57) | Connects to PostgreSQL, fetches transactions |
-| `03_process_daily.py` | Script 3 (line 83) | Converts CSV → Parquet with partitioning |
-| `04_build_subscription_view.py` | Script 3 (line 105) | Builds final subscription view in DuckDB |
-| `05_build_counters.py` | Script 4 (line 45) | Aggregates transaction counts by CPC and Service |
-
-#### Utility Scripts
-| Script | Purpose |
-|--------|---------|
-| `utils/log_rotation.sh` | Deletes logs older than 15 days |
-| `utils/counter_utils.py` | Counter system utilities (MASTERCPC parsing, atomic writes) |
-
-#### Testing & Validation Scripts (Scripts/others/)
-| Script | Purpose |
-|--------|---------|
-| `check_transactions_parquet_data.py` | Validates transaction Parquet integrity |
-| `check_subscriptions_parquet_data.py` | Validates subscription Parquet integrity |
-| `check_users.py` | Validates user data quality |
-| `extract_music_subscriptions.py` | Extracts music-specific subscriptions |
-| `query_msisdn_from_tx.py` | **NEW:** Query full history by MSISDN |
-| `query_tmuserid_from_tx.py` | **NEW:** Query full history by TMUSERID |
 
 ---
 
 ## Pipeline Workflow
 
-### Stage 1: User Base Collection (1.GET_NBS_BASE.sh)
+### Stage 1: Get User Base (8:05 AM)
+- **Script**: `1.GET_NBS_BASE.sh` → `Scripts/01_aggregate_user_base.py`
+- **Purpose**: Fetch current user base snapshot from Nova PostgreSQL server
+- **Output**: `User_Base/NBS_BASE_YYYYMMDD.csv`
+- **Duration**: ~5 minutes
 
-```bash
-START
-  ↓
-Log rotation (delete logs > 15 days)
-  ↓
-Download NBS_Base.csv from remote server
-  ↓
-Validate file exists and has content
-  ↓
-Execute: Scripts/01_aggregate_user_base.py
-  ├─ Read all CSV files in User_Base/NBS_BASE/
-  ├─ Aggregate by service type
-  ├─ Aggregate by category
-  ├─ Output: user_base_by_service.csv
-  └─ Output: user_base_by_category.csv
-  ↓
-Log completion timestamp
-  ↓
-END
-```
+### Stage 2: Fetch Daily Data (8:25 AM)
+- **Script**: `2.FETCH_DAILY_DATA.sh` → `Scripts/02_fetch_remote_nova_data.sh`
+- **Purpose**: Fetch yesterday's transaction data for all 6 types
+- **Output**: `Daily_Data/{act,reno,dct,cnr,rfnd,ppd}_atlas_day.csv`
+- **Duration**: ~10 minutes
 
-### Stage 2: Transaction Data Fetch (2.FETCH_DAILY_DATA.sh)
+### Stage 3: Process & Build View (8:30 AM)
+- **Script**: `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `Scripts/03_process_daily.py` + `Scripts/04_build_subscription_view.py`
+- **Purpose**: Convert CSVs to Parquet, build subscription lifecycle view
+- **Output**: `Parquet_Data/transactions/{type}/year_month=YYYY-MM/*.parquet`
+- **Duration**: ~45 minutes
 
-```bash
-START
-  ↓
-Log rotation (delete logs > 15 days)
-  ↓
-Set DATE (defaults to yesterday)
-  ↓
-Create directory: Daily_Data/YYYY-MM-DD/
-  ↓
-FOR EACH transaction type (ACT, RENO, DCT, PPD, CNR, RFND):
-  ├─ Execute: Scripts/02_fetch_remote_nova_data.sh <TYPE> <DATE>
-  │   ├─ SSH to remote PostgreSQL server
-  │   ├─ Execute SQL query for transaction type
-  │   ├─ Save result to Daily_Data/YYYY-MM-DD/<TYPE>.csv
-  │   └─ Log row count and status
-  └─ Continue to next type
-  ↓
-Validate all 6 CSV files exist
-  ↓
-Log completion timestamp
-  ↓
-END
-```
-
-### Stage 3: Processing & Aggregation (3.PROCESS_DAILY_AND_BUILD_VIEW.sh)
-
-```bash
-START
-  ↓
-Log rotation (delete logs > 15 days)
-  ↓
-Set DATE (defaults to yesterday)
-  ↓
-Validate 6 CSV files exist in Daily_Data/YYYY-MM-DD/
-  ↓
-Execute: Scripts/03_process_daily.py <DATE>
-  ├─ Read each CSV file
-  ├─ Convert to Parquet format
-  ├─ Apply Hive partitioning (year_month=YYYY-MM)
-  ├─ Save to Parquet_Data/transactions/<type>/
-  └─ Log processing statistics
-  ↓
-Execute: Scripts/04_build_subscription_view.py
-  ├─ Load all Parquet transaction files
-  ├─ Execute sql/build_subscription_view.sql (241 lines)
-  ├─ Build comprehensive subscription lifecycle view
-  │   ├─ Join transactions with user base
-  │   ├─ Calculate subscription metrics
-  │   ├─ Aggregate revenue data
-  │   └─ Compute lifecycle statistics
-  └─ Save to Parquet_Data/aggregated/subscriptions.parquet
-  ↓
-Log completion timestamp
-  ↓
-END
-```
-
-### Stage 4: Transaction Counters (4.BUILD_TRANSACTION_COUNTERS.sh)
-
-```bash
-START
-  ↓
-Log rotation (delete logs > 15 days)
-  ↓
-Set DATE (defaults to yesterday)
-  ↓
-Execute: Scripts/05_build_counters.py <DATE>
-  ├─ Load transaction Parquet files for specified date
-  ├─ Aggregate counts by CPC:
-  │   ├─ Count transactions by type (ACT, RENO, DCT, CNR, PPD, RFND)
-  │   ├─ Split activations: act_free (rev=0) vs act_pay (rev>0)
-  │   ├─ Sum revenue (rev) and refund amounts (rfnd_amount)
-  │   └─ Round monetary values to 2 decimals
-  ├─ Load MASTERCPC.csv mapping
-  ├─ Aggregate by Service:
-  │   ├─ Group CPCs by service_name
-  │   ├─ Sum all transaction counts
-  │   ├─ Concatenate CPC lists per service
-  │   └─ Calculate service-level revenue and refunds
-  ├─ Merge with historical counters (idempotent updates)
-  ├─ Save to Counters/Counters_CPC.parquet
-  └─ Save to Counters/Counters_Service.csv
-  ↓
-Log completion timestamp
-  ↓
-END
-```
+### Stage 4: Build Counters (9:30 AM)
+- **Script**: `4.BUILD_TRANSACTION_COUNTERS.sh` → `Scripts/05_build_counters.py`
+- **Purpose**: Generate service and CPC-level transaction counters
+- **Output**: `Counters/Counters_Service.csv`, `Counters/Counters_CPC.parquet`
+- **Duration**: ~15 minutes
+- **Note**: Independent pipeline, can run after Stage 3
 
 ---
 
 ## Installation & Setup
 
 ### Prerequisites
+```bash
+# Python 3.x with required packages
+pip install polars duckdb pandas python-dateutil
+```
 
-- macOS (for launchd scheduling)
-- Python 3.x
-- SSH access to remote PostgreSQL server
-- Sufficient disk space for data storage
-
-### Installation Steps
-
-1. **Clone/Navigate to Project Directory**
-   ```bash
-   cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
-   ```
-
-2. **Install Python Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Verify SSH Access**
-   ```bash
-   ssh user@remote-server
-   ```
-
-4. **Create Required Directories**
-   ```bash
-   mkdir -p Daily_Data Parquet_Data/transactions Parquet_Data/aggregated User_Base/NBS_BASE Logs
-   ```
-
-5. **Set Script Permissions**
-   ```bash
-   chmod +x *.sh
-   chmod +x Scripts/*.sh
-   chmod +x Scripts/utils/*.sh
-   ```
+### Configuration
+1. Update PostgreSQL connection details in `Scripts/02_fetch_remote_nova_data.sh`
+2. Verify Python path in all scripts: `/opt/anaconda3/bin/python`
+3. Ensure `MASTERCPC.csv` is present in project root
 
 ---
 
 ## Scheduled Automation
 
-### Launchd Configuration
+### launchd Configuration
+The pipeline runs automatically via macOS launchd:
 
-The pipeline runs automatically via macOS launchd with 4 scheduled jobs:
+```xml
+<!-- ~/Library/LaunchAgents/com.cvas.stage1.plist -->
+<plist>
+  <dict>
+    <key>Label</key>
+    <string>com.cvas.stage1</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/Users/josemanco/CVAS/CVAS_BEYOND_DATA/1.GET_NBS_BASE.sh</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+      <key>Hour</key>
+      <integer>8</integer>
+      <key>Minute</key>
+      <integer>5</integer>
+    </dict>
+  </dict>
+</plist>
+```
 
-| Job ID | Script | Schedule | Purpose |
-|--------|--------|----------|---------|
-| `com.josemanco.nbs_base` | `1.GET_NBS_BASE.sh` | 8:05 AM daily | User base collection |
-| `com.josemanco.fetch_daily` | `2.FETCH_DAILY_DATA.sh` | 8:25 AM daily | Transaction data fetch |
-| `com.josemanco.process_daily` | `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | 8:30 AM daily | Processing & aggregation |
-| `com.josemanco.build_counters` | `4.BUILD_TRANSACTION_COUNTERS.sh` | 9:30 AM daily | Transaction counters (independent) |
-
-### Modify Schedule
-
-Replace `<job>` with: `nbs_base`, `fetch_daily`, `process_daily`, or `build_counters`
-
-1. **Edit the plist file:**
-   ```bash
-   nvim /Users/josemanco/Library/LaunchAgents/com.josemanco.<job>.plist
-   ```
-
-2. **Change hour (0-23) and minute (0-59):**
-   ```xml
-   <key>Hour</key>
-   <integer>8</integer>     <!-- Change this -->
-   <key>Minute</key>
-   <integer>5</integer>     <!-- Change this -->
-   ```
-
-3. **Reload the job:**
-   ```bash
-   launchctl unload /Users/josemanco/Library/LaunchAgents/com.josemanco.<job>.plist
-   launchctl load /Users/josemanco/Library/LaunchAgents/com.josemanco.<job>.plist
-   ```
-
-### Useful Launchd Commands
-
+### Load launchd Jobs
 ```bash
-# Check if job is loaded
-launchctl list | grep com.josemanco.<job>
-
-# View job details and next run time
-launchctl print gui/$(id -u)/com.josemanco.<job>
-
-# View last run status
-launchctl print gui/$(id -u)/com.josemanco.<job> | grep -E "last exit|state"
-
-# Manually trigger job (same environment as scheduled run)
-launchctl start com.josemanco.<job>
-
-# Unload (stop) job
-launchctl unload /Users/josemanco/Library/LaunchAgents/com.josemanco.<job>.plist
-
-# Load (start) job
-launchctl load /Users/josemanco/Library/LaunchAgents/com.josemanco.<job>.plist
-
-# Check all CVAS jobs
-launchctl list | grep josemanco
+launchctl load ~/Library/LaunchAgents/com.cvas.stage1.plist
+launchctl load ~/Library/LaunchAgents/com.cvas.stage2.plist
+launchctl load ~/Library/LaunchAgents/com.cvas.stage3.plist
+launchctl load ~/Library/LaunchAgents/com.cvas.stage4.plist
 ```
 
 ---
 
 ## Manual Execution
 
-### Run Individual Scripts
-
+### Run Full Pipeline
 ```bash
-# Stage 1: User Base Collection
-bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/1.GET_NBS_BASE.sh
-
-# Stage 2: Transaction Data Fetch
-bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/2.FETCH_DAILY_DATA.sh
-
-# Stage 3: Processing & Aggregation
-bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/3.PROCESS_DAILY_AND_BUILD_VIEW.sh
+cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
+./1.GET_NBS_BASE.sh && \
+./2.FETCH_DAILY_DATA.sh && \
+./3.PROCESS_DAILY_AND_BUILD_VIEW.sh && \
+./4.BUILD_TRANSACTION_COUNTERS.sh
 ```
 
-### Run Specific Date
-
+### Run Individual Stages
 ```bash
-# Fetch data for specific date
-bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/2.FETCH_DAILY_DATA.sh 2024-01-15
+# Stage 1: User Base
+./1.GET_NBS_BASE.sh
 
-# Process specific date
-bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/3.PROCESS_DAILY_AND_BUILD_VIEW.sh 2024-01-15
+# Stage 2: Fetch Data
+./2.FETCH_DAILY_DATA.sh
+
+# Stage 3: Process & Build View
+./3.PROCESS_DAILY_AND_BUILD_VIEW.sh
+
+# Stage 4: Build Counters
+./4.BUILD_TRANSACTION_COUNTERS.sh
+
+# Stage 4 with backfill
+./4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force
 ```
 
-### Run Individual Components
-
+### Regenerate Historical Data
 ```bash
-# Aggregate user base only
-/opt/anaconda3/bin/python Scripts/01_aggregate_user_base.py
+# Convert historical CSVs to Parquet
+/opt/anaconda3/bin/python Scripts/00_convert_historical.py
 
-# Fetch single transaction type
-bash Scripts/02_fetch_remote_nova_data.sh ACT 2024-01-15
-
-# Process daily data
-/opt/anaconda3/bin/python Scripts/03_process_daily.py 2024-01-15
-
-# Build subscription view
-/opt/anaconda3/bin/python Scripts/04_build_subscription_view.py
+# Rebuild all counters
+./4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force
 ```
-
-### Run Transaction Counters
-
-The counter system runs independently from the main pipeline and aggregates transaction counts by CPC and Service.
-
-```bash
-# Daily mode (default): Process yesterday's data
-bash 4.BUILD_TRANSACTION_COUNTERS.sh
-
-# Process specific date
-bash 4.BUILD_TRANSACTION_COUNTERS.sh 2024-01-15
-
-# Backfill mode: Process all missing dates from transaction data
-bash 4.BUILD_TRANSACTION_COUNTERS.sh --backfill
-
-# Force recompute existing dates
-bash 4.BUILD_TRANSACTION_COUNTERS.sh 2024-01-15 --force
-
-# Initial historical load (backfill + force)
-bash 4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force
-
-# Direct Python execution
-/opt/anaconda3/bin/python Scripts/05_build_counters.py 2024-01-15
-/opt/anaconda3/bin/python Scripts/05_build_counters.py --backfill
-```
-
-**Output Files:**
-- `Counters/Counters_CPC.parquet` - CPC-level counters (historical, 15 columns)
-- `Counters/Counters_Service.csv` - Service-level counters (historical, 21 columns)
-
-**Counter Columns:**
-- Transaction counts: `act_count` (non-upgrade), `act_free`, `act_pay`, `upg_count` (upgrades), `reno_count`, `dct_count`, `upg_dct_count` (upgrade deactivations), `cnr_count`, `ppd_count`, `rfnd_count`
-- Financial metrics: `rfnd_amount`, `rev` (total revenue)
-- Service metadata (Service CSV only): `Free_CPC`, `Free_Period`, `Upgrade_CPC`, `CHG_Period`, `CHG_Price`
-- Metadata: `date`, `cpc`/`service_name`, `tme_category`, `cpcs`, `last_updated`
-
-**Execution Modes:**
-- **Daily mode**: Processes yesterday's data (default)
-- **Backfill mode**: Auto-discovers and processes all missing dates
-- **Force mode**: Recomputes existing dates (idempotent updates)
-
-### Data Querying Tools
-
-Validate data for specific users using the provided utility scripts:
-
-```bash
-# Query by MSISDN (automatically adds country code '34' if missing)
-# Outputs: Act/Reno history, revenue summary, and refunds
-python Scripts/others/query_msisdn_from_tx.py 34686516147
-
-# Query by TMUSERID
-# Outputs: Linked MSISDNs and full transaction history
-python Scripts/others/query_tmuserid_from_tx.py 8343817051345500000
-```
-
-### Query Transaction Data
-
-Query subscription lifecycle by MSISDN or TMUSERID:
-
-```bash
-# Query by MSISDN (automatically adds country code '34' if missing)
-python Scripts/others/query_msisdn_from_tx.py 686516147
-python Scripts/others/query_msisdn_from_tx.py 34686516147
-
-# Query by TMUSERID
-python Scripts/others/query_tmuserid_from_tx.py 8343817051345500000
-```
-
-**Output includes:**
-- MSISDN ↔ TMUSERID mapping (all unique identifiers associated)
-- Full subscription lifecycle grouped by `subscription_id`:
-  - ACT (Activations)
-  - RENO (Renewals)
-  - DCT (Deactivations)
-  - CNR (Cancellations)
-  - RFND (Refunds)
-- Summary statistics (counts per transaction type, total revenue, total refunded)
-- PPD (Pay Per Download) one-time purchases (displayed separately)
-
-**Query Logic:**
-1. Step 1: Find all `subscription_id`s associated with the identifier (from ACT, RENO, DCT)
-2. Step 2: Retrieve all transactions (ACT, RENO, DCT, CNR, RFND) for those subscription_ids
-3. Step 3: Query PPD transactions directly by the original identifier
 
 ---
 
 ## Monitoring & Logs
 
-### Log Files Location
-
+### Log Files
 ```
 Logs/
-├── 1.GET_NBS_BASE.log                    # Stage 1 execution log
-├── 2.FETCH_DAILY_DATA.log                # Stage 2 execution log
-├── 3.PROCESS_DAILY_AND_BUILD_VIEW.log    # Stage 3 execution log
-└── 4.BUILD_TRANSACTION_COUNTERS.log      # Stage 4 execution log
-```
-
-### View Logs
-
-```bash
-# View full log
-cat Logs/1.GET_NBS_BASE.log
-
-# View last 50 lines
-tail -n 50 Logs/2.FETCH_DAILY_DATA.log
-
-# Real-time monitoring
-tail -f Logs/3.PROCESS_DAILY_AND_BUILD_VIEW.log
-
-# Monitor counter system
-tail -f Logs/4.BUILD_TRANSACTION_COUNTERS.log
-
-# Search for errors
-grep -i error Logs/*.log
-
-# Check today's execution
-grep "$(date +%Y-%m-%d)" Logs/*.log
+├── 1_get_nbs_base_YYYYMMDD.log
+├── 2_fetch_daily_data_YYYYMMDD.log
+├── 3_process_daily_YYYYMMDD.log
+└── 4_build_counters_YYYYMMDD.log
 ```
 
 ### Log Rotation
+- **Retention**: 15 days
+- **Script**: `Scripts/utils/log_rotation.sh`
+- **Execution**: Runs automatically at end of each stage
 
-- **Retention Period:** 15 days
-- **Managed By:** `Scripts/utils/log_rotation.sh`
-- **Executed:** At the start of each orchestration script
-- **Command:** `find Logs/ -name "*.log" -mtime +15 -delete`
+### Check Pipeline Status
+```bash
+# View latest logs
+tail -f Logs/4_build_counters_$(date +%Y%m%d).log
+
+# Check for errors
+grep -i error Logs/*.log
+```
 
 ---
 
@@ -723,216 +350,84 @@ grep "$(date +%Y-%m-%d)" Logs/*.log
 
 ### Transaction Types
 
-| Code | Name | Description | Has Revenue | Volume |
-|------|------|-------------|-------------|--------|
-| **ACT** | Activations | New subscriptions + upgrades | ✅ Yes | High |
-| **RENO** | Renewals | Subscription renewals | ✅ Yes | Highest |
-| **DCT** | Deactivations | Service cancellations | ❌ No | Medium |
-| **CNR** | Cancellations | User-initiated cancellations | ❌ No | Low |
-| **RFND** | Refunds | Payment refunds | ✅ Yes (negative) | Low |
-| **PPD** | Prepaid | Prepaid transactions | ✅ Yes | Medium |
+#### ACT/RENO/PPD (15 columns):
+```
+tmuserid, msisdn, cpc, trans_type_id, channel_id, channel_act, trans_date,
+act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id,
+subscription_id, rev
+```
 
-### Key Data Files
+#### DCT (13 columns):
+```
+tmuserid, msisdn, cpc, trans_type_id, channel_id, channel_dct, trans_date,
+act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id,
+subscription_id
+```
 
-| File | Format | Size | Purpose |
-|------|--------|------|---------|
-| `MASTERCPC.csv` | CSV | ~500 KB | Service/CPC mapping reference |
-| `user_base_by_service.csv` | CSV | ~2 MB | User base aggregated by service |
-| `user_base_by_category.csv` | CSV | ~1 MB | User base aggregated by category |
-| `subscriptions.parquet` | Parquet | Varies | Final comprehensive subscription view |
-| `Counters_CPC.parquet` | Parquet | ~1 MB | CPC-level transaction counters (historical) |
-| `Counters_Service.csv` | CSV | ~4.5 MB | Service-level transaction counters (historical) |
+#### CNR (5 columns):
+```
+cancel_date, sbn_id, tmuserid, cpc, mode
+```
+
+#### RFND (7 columns):
+```
+tmuserid, cpc, refnd_date, rfnd_amount, rfnd_cnt, sbnid, instant_rfnd
+```
 
 ### Counter Schemas
 
-#### Counters_CPC.parquet (15 columns)
-| Column | Type | Description |
-|--------|------|-------------|
-| `date` | Date | Transaction date |
-| `cpc` | Int64 | Content Provider Code |
-| `act_count` | Int64 | Non-upgrade activations (channel_act != 'UPGRADE') |
-| `act_free` | Int64 | Free non-upgrade activations (rev=0, channel_act != 'UPGRADE') |
-| `act_pay` | Int64 | Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE') |
-| `upg_count` | Int64 | Upgrade activations (channel_act == 'UPGRADE') |
-| `reno_count` | Int64 | Renewal count |
-| `dct_count` | Int64 | Deactivation count |
-| `upg_dct_count` | Int64 | Upgrade deactivations (channel_dct == 'UPGRADE') |
-| `cnr_count` | Int64 | Cancellation count |
-| `ppd_count` | Int64 | Prepaid transaction count |
-| `rfnd_count` | Int64 | Refund count |
-| `rfnd_amount` | Float64 | Total refund amount (2 decimals) |
-| `rev` | Float64 | Total revenue (2 decimals) |
-| `last_updated` | Datetime | Last update timestamp |
+#### Counters_CPC.parquet (13 columns):
+```
+date, cpc, act_count, act_free, act_pay, upg_count, reno_count, dct_count,
+upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev, last_updated
+```
 
-#### Counters_Service.csv (21 columns)
-| Column | Type | Description |
-|--------|------|-------------|
-| `date` | Date | Transaction date |
-| `service_name` | String | Service name from MASTERCPC |
-| `tme_category` | String | TME category |
-| `cpcs` | String | Comma-separated list of CPCs |
-| `Free_CPC` | Int64 | Free CPC from MASTERCPC |
-| `Free_Period` | Int64 | Free period from MASTERCPC |
-| `Upgrade_CPC` | Int64 | Upgrade CPC from MASTERCPC |
-| `CHG_Period` | Int64 | Charge period from MASTERCPC |
-| `CHG_Price` | Float64 | Charge price from MASTERCPC |
-| `act_count` | Int64 | Non-upgrade activations (channel_act != 'UPGRADE') |
-| `act_free` | Int64 | Free non-upgrade activations (rev=0, channel_act != 'UPGRADE') |
-| `act_pay` | Int64 | Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE') |
-| `upg_count` | Int64 | Upgrade activations (channel_act == 'UPGRADE') |
-| `reno_count` | Int64 | Renewal count |
-| `dct_count` | Int64 | Deactivation count |
-| `upg_dct_count` | Int64 | Upgrade deactivations (channel_dct == 'UPGRADE') |
-| `cnr_count` | Int64 | Cancellation count |
-| `ppd_count` | Int64 | Prepaid transaction count |
-| `rfnd_count` | Int64 | Refund count |
-| `rfnd_amount` | Float64 | Total refund amount (2 decimals) |
-| `rev` | Float64 | Total revenue (2 decimals) |
-
-**Counter Features:**
-- **Idempotent updates**: Can reprocess dates without duplicates
-- **Nubico filtering**: Excludes services containing "nubico" (case-insensitive)
-- **Auto-discovery**: Backfill mode finds all missing dates automatically
-- **Force mode**: Recompute existing dates with `--force` flag
-- **Upgrade separation**: Upgrades are tracked separately from regular activations
-  - `act_count` excludes upgrades (channel_act != 'UPGRADE')
-  - `upg_count` contains only upgrades (channel_act == 'UPGRADE')
-  - Total activations = `act_count` + `upg_count`
-
-### Parquet Partitioning Strategy
-
-- **Method:** Hive-style partitioning
-- **Partition Key:** `year_month=YYYY-MM`
-- **Structure:** `Parquet_Data/transactions/<type>/year_month=YYYY-MM/*.parquet`
-- **Benefits:**
-  - Faster query performance (partition pruning)
-  - Organized data by time period
-  - Efficient storage management
-  - Easy data lifecycle management
+#### Counters_Service.csv (21 columns):
+```
+date, service_name, tme_category, cpcs, Free_CPC, Free_Period, Upgrade_CPC,
+CHG_Period, CHG_Price, act_count, act_free, act_pay, upg_count, reno_count,
+dct_count, upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
+```
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
+### Issue: Counters don't match manual counts
+**Solution**:
+1. Verify `rfnd_cnt` is being summed (not row count)
+2. Check parquet files are up to date with source CSVs
+3. Run `Scripts/00_convert_historical.py` to regenerate parquet files
+4. Rebuild counters: `./4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force`
 
-| Issue | Possible Cause | Solution |
-|-------|---------------|----------|
-| **"command not found"** | launchd PATH issues | Use absolute paths (e.g., `/opt/anaconda3/bin/python`) |
-| **Job not running** | Job not loaded in launchd | `launchctl list \| grep <job>` |
-| **Permission denied** | Script not executable | `chmod +x <script-path>` |
-| **SSH connection failed** | SSH keys not configured | Set up SSH key authentication |
-| **Missing CSV files** | Stage 2 incomplete | Check `2.FETCH_DAILY_DATA.log` for errors |
-| **Parquet write failed** | Disk space insufficient | Check disk space: `df -h` |
-| **Works manually but fails in launchd** | Environment differences | Add absolute paths in scripts |
+### Issue: Pipeline stage fails
+**Solution**:
+1. Check previous stage completed successfully
+2. Review logs in `Logs/` directory
+3. Verify data files exist in expected locations
+4. Ensure Python path is `/opt/anaconda3/bin/python`
 
-### Validation Commands
+### Issue: Missing data in parquet files
+**Solution**:
+1. Re-run `Scripts/00_convert_historical.py`
+2. Verify source CSVs in `/Users/josemanco/Dropbox/BEYOND_DATA_OLD_backup/`
 
-```bash
-# Check pipeline status
-launchctl list | grep josemanco
-
-# Verify data exists
-ls -lh Daily_Data/$(date +%Y-%m-%d)/
-ls -lh Parquet_Data/transactions/act/
-ls -lh Counters/
-
-# Count records in Parquet
-python -c "import polars as pl; print(pl.read_parquet('Parquet_Data/aggregated/subscriptions.parquet').shape)"
-
-# Check counter files
-python -c "import polars as pl; print(f'CPC Counters: {pl.read_parquet(\"Counters/Counters_CPC.parquet\").shape}')"
-wc -l Counters/Counters_Service.csv
-
-# Verify all 6 transaction types
-for type in ACT RENO DCT PPD CNR RFND; do
-    echo -n "$type: "
-    wc -l "Daily_Data/$(date -v-1d +%Y-%m-%d)/$type.csv"
-done
-
-# Check disk usage
-du -sh Parquet_Data/
-du -sh User_Base/NBS_BASE/
-du -sh Counters/
-
-# Query specific user data (for debugging)
-python Scripts/others/query_msisdn_from_tx.py <msisdn>
-python Scripts/others/query_tmuserid_from_tx.py <tmuserid>
-```
-
-### Emergency Recovery
-
-```bash
-# Stop all jobs
-launchctl unload /Users/josemanco/Library/LaunchAgents/com.josemanco.*.plist
-
-# Clear problematic data
-rm -rf Daily_Data/$(date +%Y-%m-%d)/
-
-# Rerun specific stage
-bash /Users/josemanco/CVAS/CVAS_BEYOND_DATA/2.FETCH_DAILY_DATA.sh $(date +%Y-%m-%d)
-
-# Restart all jobs
-launchctl load /Users/josemanco/Library/LaunchAgents/com.josemanco.*.plist
-```
-
-### Debug Mode
-
-Enable verbose logging by editing scripts:
-
-```bash
-# At the top of any .sh script, add:
-set -x  # Enable debug mode
-set -e  # Exit on error
-```
+See `.ai-context.md` for detailed troubleshooting.
 
 ---
 
-## Project Maintenance
+## 🤝 Contributing
 
-### Regular Tasks
+This project uses AI-assisted development with automatic documentation updates.
 
-| Task | Frequency | Command |
-|------|-----------|---------|
-| **Check logs** | Daily | `tail -100 Logs/*.log` |
-| **Monitor disk space** | Weekly | `du -sh Parquet_Data/ User_Base/` |
-| **Verify data quality** | Weekly | Run validation scripts in `Scripts/others/` |
-| **Review job status** | Daily | `launchctl list \| grep josemanco` |
-| **Archive old data** | Monthly | Move old Parquet partitions to archive |
-
-### Data Retention Policy
-
-- **Daily CSV Files:** Deleted after Parquet conversion (manual cleanup)
-- **Logs:** 15-day retention (automatic)
-- **Parquet Data:** Indefinite (manual archive when needed)
-- **User Base Snapshots:** All snapshots retained (1100+ files)
+**For AI agents**: Follow the orchestration protocol at the top of this file.
 
 ---
 
-## Developer Guidelines
+## 📄 License
 
-This project follows these conventions:
-
-1. **Sequential Execution Required:** Scripts 1 → 2 → 3 must run in order
-2. **All 6 Transaction Types Required:** Pipeline fails if any CSV is missing
-3. **Absolute Paths in Automation:** launchd requires full paths (e.g., `/opt/anaconda3/bin/python`)
-4. **Hive Partitioning:** All Parquet files use `year_month=YYYY-MM` partitioning
-5. **No Manual Directory Changes:** Structure is fixed, scripts use relative paths from project root
-6. **15-Day Log Retention:** Logs auto-delete after 15 days
-7. **User Base Aggregation:** Processes 1100+ daily snapshots into 2 summary CSV files
-8. **DuckDB for Analytics:** Final subscription view built with 241-line SQL query
-9. **Columnar Storage:** All analytics data stored as Parquet for performance
-10. **macOS Specific:** Uses launchd (macOS scheduling system), not cron
-
-### Key Directories
-- **Source of Truth:** `Parquet_Data/aggregated/subscriptions.parquet`
-- **Reference Data:** `MASTERCPC.csv` (service/CPC mapping)
-- **Active Scripts:** `Scripts/01_*.py`, `Scripts/02_*.sh`, `Scripts/03_*.py`, `Scripts/04_*.py`, `Scripts/05_*.py`
-- **Counter Data:** `Counters/Counters_CPC.parquet`, `Counters/Counters_Service.csv`
-- **Temporary Data:** `Daily_Data/` (CSV files, can be deleted after processing)
+[Add your license here]
 
 ---
 
-**Project Maintained By:** Jose Manco
-**Project Path:** `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
-**Last Updated:** 2025-01-28
+**For detailed technical documentation, architecture constraints, and session history, see `.ai-context.md`**
