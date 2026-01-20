@@ -231,11 +231,11 @@ def aggregate_by_service(
     cpc_map: pl.DataFrame
 ) -> tuple[pl.DataFrame, list[int]]:
     """
-    Aggregate CPC counters by Service Name.
-    Excludes services containing 'nubico' (case-insensitive).
+    Join CPC counters with service metadata.
+    Returns one row per date/cpc combination.
 
     Returns:
-        - Aggregated DataFrame
+        - DataFrame with service info joined
         - List of unmapped CPCs
     """
     if counters.is_empty():
@@ -243,12 +243,9 @@ def aggregate_by_service(
             'date': pl.Date,
             'service_name': pl.Utf8,
             'tme_category': pl.Utf8,
-            'cpcs': pl.Utf8,
-            'Free_CPC': pl.Int64,
-            'Free_Period': pl.Int64,
-            'Upgrade_CPC': pl.Int64,
-            'CHG_Period': pl.Int64,
-            'CHG_Price': pl.Float64,
+            'cpc': pl.Int64,
+            'cpc_period': pl.Int64,
+            'cpc_price': pl.Float64,
             'act_count': pl.Int64,
             'act_free': pl.Int64,
             'act_pay': pl.Int64,
@@ -271,20 +268,14 @@ def aggregate_by_service(
         'cpc': unmapped_cpcs,
         'service_name': ['UNKNOWN'] * len(unmapped_cpcs),
         'tme_category': [''] * len(unmapped_cpcs),
-        'Free_CPC': [0] * len(unmapped_cpcs),
-        'Free_Period': [0] * len(unmapped_cpcs),
-        'Upgrade_CPC': [0] * len(unmapped_cpcs),
-        'CHG_Period': [0] * len(unmapped_cpcs),
-        'CHG_Price': [0.0] * len(unmapped_cpcs)
+        'cpc_period': [0] * len(unmapped_cpcs),
+        'cpc_price': [0.0] * len(unmapped_cpcs)
     }) if unmapped_cpcs else pl.DataFrame(schema={
         'cpc': pl.Int64,
         'service_name': pl.Utf8,
         'tme_category': pl.Utf8,
-        'Free_CPC': pl.Int64,
-        'Free_Period': pl.Int64,
-        'Upgrade_CPC': pl.Int64,
-        'CHG_Period': pl.Int64,
-        'CHG_Price': pl.Float64
+        'cpc_period': pl.Int64,
+        'cpc_price': pl.Float64
     })
 
     full_map = pl.concat([cpc_map, unknown_mapping])
@@ -294,11 +285,8 @@ def aggregate_by_service(
     joined = joined.with_columns([
         pl.col('service_name').fill_null('UNKNOWN'),
         pl.col('tme_category').fill_null(''),
-        pl.col('Free_CPC').fill_null(0),
-        pl.col('Free_Period').fill_null(0),
-        pl.col('Upgrade_CPC').fill_null(0),
-        pl.col('CHG_Period').fill_null(0),
-        pl.col('CHG_Price').fill_null(0.0)
+        pl.col('cpc_period').fill_null(0),
+        pl.col('cpc_price').fill_null(0.0)
     ])
 
     joined = joined.filter(
@@ -306,41 +294,13 @@ def aggregate_by_service(
         ~pl.col('service_name').str.to_lowercase().str.contains('movistar apple music')
     )
 
-    aggregated = joined.group_by(['date', 'service_name', 'tme_category']).agg([
-        pl.col('cpc').unique().sort().alias('cpcs'),
-        pl.col('act_count').sum(),
-        pl.col('act_free').sum(),
-        pl.col('act_pay').sum(),
-        pl.col('upg_count').sum(),
-        pl.col('reno_count').sum(),
-        pl.col('dct_count').sum(),
-        pl.col('upg_dct_count').sum(),
-        pl.col('cnr_count').sum(),
-        pl.col('ppd_count').sum(),
-        pl.col('rfnd_count').sum(),
-        pl.col('rfnd_amount').sum().round(2),
-        pl.col('rev').sum().round(2),
-        pl.col('Free_CPC').first(),
-        pl.col('Free_Period').first(),
-        pl.col('Upgrade_CPC').first(),
-        pl.col('CHG_Period').first(),
-        pl.col('CHG_Price').first()
-    ]).sort(['date', 'service_name'])
-
-    aggregated = aggregated.with_columns([
-        pl.col('cpcs').cast(pl.List(pl.Utf8)).list.join(', ')
-    ])
-
-    aggregated = aggregated.select([
+    result = joined.select([
         'date',
         'service_name',
         'tme_category',
-        'cpcs',
-        'Free_CPC',
-        'Free_Period',
-        'Upgrade_CPC',
-        'CHG_Period',
-        'CHG_Price',
+        'cpc',
+        'cpc_period',
+        'cpc_price',
         'act_count',
         'act_free',
         'act_pay',
@@ -353,9 +313,10 @@ def aggregate_by_service(
         'rfnd_count',
         'rfnd_amount',
         'rev'
-    ])
+    ]).sort(['date', 'service_name', 'cpc'])
 
-    return aggregated, unmapped_cpcs
+    return result, unmapped_cpcs
+
 
 
 def process_date(
@@ -415,10 +376,10 @@ def process_date(
     cpc_map = load_mastercpc(mastercpc_path)
     print(f"✓ {len(cpc_map):,} CPC mappings")
     
-    print(f"  Aggregating by service...", end=' ')
+    print(f"  Joining service metadata...", end=' ')
     service_counters, unmapped = aggregate_by_service(merged, cpc_map)
     stats['unmapped_cpcs'] = unmapped
-    print(f"✓ {service_counters['service_name'].n_unique() if not service_counters.is_empty() else 0} services")
+    print(f"✓ {len(service_counters):,} rows")
     
     if unmapped:
         print(f"\n  ⚠️  WARNING: {len(unmapped)} unmapped CPCs found:")

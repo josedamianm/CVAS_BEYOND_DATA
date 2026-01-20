@@ -138,64 +138,20 @@ def get_missing_dates(parquet_base: Path, counters_path: Path) -> list[str]:
 
 def load_mastercpc(path: Path) -> pl.DataFrame:
     """
-    Load and parse MASTERCPC.csv, expanding CPCs set notation.
+    Load MASTERCPC.csv with simplified format.
 
-    Returns DataFrame with columns: [cpc, service_name, tme_category, Free_CPC, Free_Period, Upgrade_CPC, CHG_Period, CHG_Price]
+    Returns DataFrame with columns: [cpc, service_name, tme_category, cpc_period, cpc_price]
     """
     df = pl.read_csv(path, null_values=['', 'NULL'])
 
-    rows = []
-    for row in df.iter_rows(named=True):
-        service_name = row.get('Service Name') or 'UNKNOWN'
-        tme_category = row.get('TME Category') or ''
-        cpcs_str = row.get('CPCs', '')
-        upgrade_cpc = row.get('Upgrade_CPC')
-        free_cpc = row.get('Free_CPC')
-        free_period = row.get('Free_Period', 0)
-        chg_period = row.get('CHG_Period', 0)
-        chg_price = row.get('CHG_Price', 0.0)
+    df = df.with_columns([
+        pl.col('service_name').fill_null('UNKNOWN'),
+        pl.col('tme_category').fill_null(''),
+        pl.col('cpc_period').fill_null(0),
+        pl.col('cpc_price').fill_null(0.0)
+    ])
 
-        cpcs = set()
-
-        if cpcs_str and isinstance(cpcs_str, str):
-            cleaned = cpcs_str.strip('{}')
-            if cleaned:
-                for cpc in cleaned.split(','):
-                    cpc = cpc.strip()
-                    if cpc.isdigit():
-                        cpcs.add(int(cpc))
-
-        if upgrade_cpc is not None and not (isinstance(upgrade_cpc, float) and str(upgrade_cpc) == 'nan'):
-            try:
-                cpcs.add(int(upgrade_cpc))
-            except (ValueError, TypeError):
-                pass
-
-        for cpc in cpcs:
-            rows.append({
-                'cpc': cpc,
-                'service_name': service_name if service_name else 'UNKNOWN',
-                'tme_category': tme_category if tme_category else '',
-                'Free_CPC': int(free_cpc) if free_cpc is not None and not (isinstance(free_cpc, float) and str(free_cpc) == 'nan') else 0,
-                'Free_Period': int(free_period) if free_period is not None and not (isinstance(free_period, float) and str(free_period) == 'nan') else 0,
-                'Upgrade_CPC': int(upgrade_cpc) if upgrade_cpc is not None and not (isinstance(upgrade_cpc, float) and str(upgrade_cpc) == 'nan') else 0,
-                'CHG_Period': int(chg_period) if chg_period is not None and not (isinstance(chg_period, float) and str(chg_period) == 'nan') else 0,
-                'CHG_Price': float(chg_price) if chg_price is not None and not (isinstance(chg_price, float) and str(chg_price) == 'nan') else 0.0
-            })
-
-    if not rows:
-        return pl.DataFrame(schema={
-            'cpc': pl.Int64,
-            'service_name': pl.Utf8,
-            'tme_category': pl.Utf8,
-            'Free_CPC': pl.Int64,
-            'Free_Period': pl.Int64,
-            'Upgrade_CPC': pl.Int64,
-            'CHG_Period': pl.Int64,
-            'CHG_Price': pl.Float64
-        })
-
-    return pl.DataFrame(rows).unique(subset=['cpc'])
+    return df.unique(subset=['cpc'])
 
 
 def load_counters_cpc(path: Path) -> pl.DataFrame:
@@ -241,12 +197,12 @@ def write_atomic_csv(df: pl.DataFrame, path: Path) -> None:
     Write DataFrame to CSV atomically (temp + rename).
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     fd, tmp_path = tempfile.mkstemp(suffix='.csv', dir=path.parent)
     os.close(fd)
-    
+
     try:
-        df.write_csv(tmp_path)
+        df.write_csv(tmp_path, quote_style='non_numeric')
         os.replace(tmp_path, path)
     except Exception:
         if os.path.exists(tmp_path):
