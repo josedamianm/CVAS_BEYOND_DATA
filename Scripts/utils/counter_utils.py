@@ -202,7 +202,7 @@ def write_atomic_csv(df: pl.DataFrame, path: Path) -> None:
     os.close(fd)
 
     try:
-        df.write_csv(tmp_path, quote_style='non_numeric')
+        df.write_csv(tmp_path, quote_style='never')
         os.replace(tmp_path, path)
     except Exception:
         if os.path.exists(tmp_path):
