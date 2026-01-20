@@ -19,7 +19,7 @@ def process_cpc_file(input_excel_path, output_csv_path):
         0: 0,
         '0': 0,
         'Other': 0,
-        'PPD': 0,
+        'PPD': 99999,
         'Sesion': 0,
         pd.NA: 0,
         None: 0,
