@@ -1,10 +1,19 @@
 cpc,service_name,tme_category,cpc_period,cpc_price
 893,La Gruta del Sexo,Light,7,2.99
 928,Gofresh logos,Images,30,2.0
+3109,MoviMessenger,Free Time,30,
+3141,Contactos,Free Time,30,
 4091,La Gruta del Sexo,Light,99999,2.5
+5645,¿Quedamos?,Free Time,30,
 8778,Desc. Gameloft,Games,99999,3.0
+9999,,,0,
+10004,JCs NightClub,Light,30,2.0
+10487,Club música,Music,7,0.99
 10494,SolodeLogos Club,Images,30,2.0
 11207,Animaciones&Logos,Images,30,2.0
+15325,Euroteens,Light,30,10.0
+17510,Melodias y Tonos,Music,30,2.0
+18157,Top Models,Light,30,3.0
 18965,Desc. Gamel5,Games,99999,5.0
 19168,DescFondosPrivate,Light,99999,3.0
 20508,Desc.Play2Me1,Games,99999,1.0
@@ -21,6 +30,10 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 22122,Animaciones Brand,Images,99999,1.5
 22716,Mundo DV Porno,Light,99999,5.0
 22718,Porno Profesional,Light,99999,3.0
+23264,Canal Venus,Light,30,6.0
+23274,Forman TV,Light,30,6.0
+23383,Fantasy Mansion,Light,30,4.0
+23386,Wicked TV,Light,30,6.0
 23832,Divinas mamás,Light,99999,3.0
 23837,Corridas,Light,99999,3.0
 23841,Hardcore,Light,99999,3.0
@@ -37,6 +50,7 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 23937,Putas,Light,99999,3.0
 23939,Sexo en publico,Light,99999,2.0
 23941,Follamigos,Light,99999,3.0
+24096,MoviSexy,Light,30,5.0
 24300,Paquete TV Adultos,Light,30,20.0
 24981,Gay,Light,99999,2.0
 24983,Gay,Light,99999,3.0
@@ -52,6 +66,7 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 25150,Stripers,Light,99999,1.5
 25162,Chicas Malas,Light,99999,1.5
 25172,Macizos,Light,99999,1.5
+25376, Private XXX,Light,30,6.0
 25398,Wicked,Light,99999,2.5
 25399,Macizos,Light,99999,2.5
 25401,Latinas,Light,99999,2.5
@@ -83,18 +98,33 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 25712,Vecinitas,Light,99999,2.5
 25814,Tonos Reales,Music,30,3.99
 25828,Fondo Avatares,Images,30,3.0
+25849,Porno Travieso,Light,30,10.0
+25855,You Porn XXX/Tu Porno,Light,30,10.0
 25857,Tonos de Humor,Music,30,3.0
 28347,Fondos Dinamicos,Images,99999,2.0
+28390,Cheap & Nasty,Light,7,
 28428,Playhouse,Light,7,2.99
 28488,Video X Porn,Light,7,2.0
+28622,Mundo DVD Porno,Light,7,2.99
+28632,Mundo DVD Porno Legacy,Light,7,2.0
 28767,Tera Patrick Soft,Light,99999,1.5
 28769,Tera Patrick Soft,Light,99999,2.5
+28773,excitame,Light,7,1.0
+28775,excitame,Light,7,2.0
+29012,MoviSexy XXX,Light,30,10.0
+29032,Playboy Tv,Light,30,5.0
 29148,En Familia!,Light,99999,3.0
 29152,Grandes Pollas,Light,99999,3.0
 29158,Susc gameloft 3e,Games,30,3.0
+29247,MoviSexy XXX,Light,7,2.99
+29249,MoviSexy,Light,7,1.99
 29288,Videoclub X,Light,99999,2.5
 29290,Videoclub X,Light,99999,4.0
+29748,Private,Light,7,2.99
+29751,Private,Light,7,2.99
 30088,Puta Locura / Mr 69,Light,7,2.99
+30191,Megazorrones,Light,7,2.99
+30193,Megazorrones,Light,30,10.0
 30201,Por Culo,Light,99999,3.0
 30205,Enfermeras,Light,99999,3.0
 30230,Ex Novias,Light,99999,3.0
@@ -112,6 +142,7 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 30471,Club de Intercambios,Light,99999,3.0
 30475,Sexo Casero,Light,99999,3.0
 30710,"Movistar Juegos – EA 0,99e",Games,7,0.99
+30714,"TP Seman EA 0,99e",Games,7,0.99
 30791,Aficionados Españoles,Light,99999,3.0
 30880,Susc Real Network,Games,30,3.0
 31036,Susc Sem Play2Me,Games,7,0.99
@@ -121,15 +152,60 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 31048,La Calle del Sexo,Light,7,2.99
 31150,"Juegos 2,99 euros",Games,99999,2.99
 31192,Tf Plana Videos ,Images,7,1.99
+31208,Chat Musica,Music,7,0.99
+31272,Xvideos Club,Light,30,10.0
 31368,Musica x Paises,Music,7,0.99
 31370,Bandas Sonoras,Music,7,0.99
 31548,GayMobile+18,Light,99999,2.0
 31550,GayMobile+18,Light,99999,3.0
+31568,Digital Sin,Light,7,2.99
+31570,Wicked,Light,7,2.99
+31572,Nectar,Light,7,2.99
+31574,New Sensations,Light,7,2.99
 31581,GayMobile+18,Light,7,2.99
+31608,Tera Patrick,Light,7,2.99
+31610,Passion HD,Light,7,2.99
+31612,Canal Penthouse,Light,7,2.99
 31688,Temas Movistar,Images,99999,1.99
 31690,TP Fondos Semanal,Images,7,0.99
 31788,Fashion TV,Light,30,5.0
+31792,Divinas Mamas,Light,7,2.99
+31794,Aficionados Españoles,Light,7,2.99
+31796,Corridas,Light,7,2.99
+31798,Grandes Pollas,Light,7,2.99
+31800,Hardcore,Light,7,2.99
+31802,Hentai,Light,7,2.99
+31804,En Familia,Light,7,2.99
+31806,Lesbianas,Light,7,2.99
+31808,Cochinas Latinas,Light,7,2.99
+31810,Abuelos Cachondos,Light,7,2.99
+31812,Porno Profesional,Light,7,2.99
+31868,Sexo Oriental,Light,7,2.99
+31872,Por Culo,Light,7,2.99
+31874,Enfermeras,Light,7,2.99
+31876,Ex Novias,Light,7,2.99
+31878,Gordas,Light,7,2.99
+31880,Club de Intercambios,Light,7,2.99
+31882,Mulatas,Light,7,2.99
+31884,Orgasmos Femeninos,Light,7,2.99
+31886,Orgias,Light,7,2.99
+31888,Especial Coños,Light,7,2.99
+31890,Amateur,Light,7,2.99
+31892,Tetonas,Light,7,2.99
+31894,Travestis,Light,7,2.99
+31896,Tríos,Light,7,2.99
+31898,Universitarias,Light,7,2.99
+31900,Sexo de Lujo,Light,7,2.99
+31902,Follamigos,Light,7,2.99
+31906,Casadas,Light,7,2.99
+31908,Jovencitas,Light,7,2.99
+31910,Maduras,Light,7,2.99
+31912,Mamadas,Light,7,2.99
+31916,Gay,Light,7,2.99
+31918,PornStars,Light,7,2.99
+32053,Worldsex,Light,7,
 32067,Fashion TV,Free Time,7,1.99
+32487,Tu Porno,Light,7,2.99
 32668,"Descarga 0,99 eur",Games,99999,0.99
 32670,"Descarga 1,49 eur",Games,99999,1.49
 32672,"Descarga 1,99 eur",Games,99999,1.99
@@ -140,6 +216,8 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 33109,Juegos Sexy,Games,99999,0.99
 33115,"Juegos Sexy 3,99",Games,99999,3.99
 33289,Juegos HD Android,Games,99999,4.99
+33310,Club Sexy,Light,7,2.99
+33752,Susc Cam Oculta ,Free Time,7,
 34311,GNTRalt199,Music,99999,1.99
 34313,GNTTorc199,Music,99999,1.99
 34328,GNFTwar149,Music,99999,1.49
@@ -166,12 +244,20 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 34379,GNTRorc199,Music,99999,1.99
 34381,GNTRalt199,Music,99999,1.99
 34383,GNTRgen199,Music,99999,1.99
+34394,Deportes emocion,Sports,7,0.99
 34409,Tarifa Plana Musica,Music,7,1.48
 34410,Tarifa Plana Musica,Music,7,0.0
+34668,Novedades,Music,7,1.49
 34828,Pack Taquillas Salas X,Light,7,2.99
 35008,Musica Dance,Music,7,0.99
 35014,Musica Flamenca,Music,7,0.99
 35020,Musica Española,Music,7,0.99
+35031,Taquilla X2,Light,7,2.99
+35035,Taquilla X4,Light,7,2.99
+35037,Taquilla X5,Light,7,2.99
+35039,Taquilla X6,Light,7,2.99
+35041,Taquilla X7,Light,7,2.99
+35043,Taquilla X3,Light,7,2.99
 35293,Susc Real Network,Games,30,0.0
 35298,Amigo Games,Games,7,0.0
 35299,Susc Juegos Sexy,Games,7,0.0
@@ -180,6 +266,7 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 35315,Extra Juego Gloft,Games,99999,2.99
 35317,Extra Juego Gloft,Games,99999,4.99
 35357,Musica Latina,Music,7,0.99
+35551,Porno Callejeros,Light,7,2.99
 35869,Musica Dance,Music,7,0.0
 35870,Musica Flamenca,Music,7,0.0
 35871,Musica Española,Music,7,0.0
@@ -188,21 +275,29 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 36211,Susc Sem Play2Me,Games,7,2.99
 36251,Musica Infantil,Music,7,1.49
 36268,Mansion de Nacho Vidal,Light,7,2.99
+36308,Playboy,Light,7,2.99
 36310,Playboy,Light,99999,3.0
 36394,Penthouse,Light,7,2.99
 36396,Penthouse,Light,99999,3.0
 36432,GNFTwar199,Music,99999,1.99
+36649,Noticias Emocion,News,7,0.99
 36827,Juegos en tu movil,Games,7,2.99
 36894,JuegoCompletoXHTML0.99,Games,99999,0.99
 36896,Juego Play2me,Games,99999,1.99
 36898,JuegoCompletoXHTML2.99,Games,99999,2.99
 36900,Juego Play2me,Games,99999,3.99
+37195,Ex Novias,Light,7,0.0
+37212,Digital Sin,Light,7,0.0
 37288,Extra Juego Gloft,Games,99999,9.99
 37290,Extra Juego Gloft,Games,99999,14.99
 37448,Juegos Gameloft ,Games,7,1.49
 37449,Juegos Gameloft ,Games,7,
+37508,Taquilla X8,Light,7,2.99
+37512,Taquilla X9,Light,7,5.0
+37516,Taquilla X10,Light,7,2.99
 37841,Tap to fun,Games,7,2.99
 37843,Tap the stars,Free Time,7,1.99
+37863,Xtreme Movies,Light,7,2.99
 37922,Go Play,Games,99999,0.75
 37924,Go Play,Games,99999,0.99
 37941,Go Play,Games,99999,1.99
@@ -224,9 +319,19 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 38967,EnglishPills,Education,7,1.64
 38971,Eurosalud,Beauty and Health,7,1.23
 38972,Eurosalud,Beauty and Health,7,0.0
+39015,Taromancia,Free Time,7,1.64
+39016,Taromancia,Free Time,7,0.0
+39041,Orgasmatron,Light,7,2.99
+39071,Teledibujitos,Kids,7,
+39161,Mi Sex Video,Light,7,2.99
 39181,Mi Sex Video,Light,99999,2.99
+39301,Yo Mujer y +,Beauty and Health,7,0.82
 39302,Yo Mujer y +,Beauty and Health,7,0.0
+39321,Cuidate Mejor,Beauty and Health,7,0.82
 39322,Cuidate Mejor,Beauty and Health,7,0.0
+39361,Cam Girls,Light,7,5.0
+39480,Relatos XXX,Light,7,2.47
+39561,Vicious Cam,Light,7,3.49
 39581,Musica Clasica y Jazz,Music,7,0.99
 39582,Musica Clasica y Jazz,Music,7,0.0
 39621,Porno Gafas,Light,7,2.99
@@ -235,11 +340,13 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 39721,Game Shaker,Games,7,1.64
 39923,Znack Video,Free Time,7,1.23
 40021,Extra Juego Play2Me,Games,99999,4.99
+40061,Fashion Bip,Beauty and Health,7,1.23
 40062,Fashion Bip,Beauty and Health,7,0.0
 40101,Funatic Games,Games,7,2.47
 40161,Little Smart Planet,Kids,7,0.82
 40162,Little Smart Planet,Kids,7,0.0
 40221,Video Horoscopo,Free Time,7,2.06
+40261,Games Club,Games,7,2.47
 40341,Golazos,Free Time,7,1.23
 40342,Golazos,Free Time,7,0.0
 40402,21Naturals,Light,7,2.99
@@ -248,8 +355,10 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 40563,Musica x Generos,Music,7,0.0
 40651,Natural Beauty,Beauty and Health,7,2.06
 40675,Videos Lo + Mejor,Free Time,7,2.06
+40683,Futbolitis,Sports,7,0.99
 40771,Hazlo tu Mism@,Free Time,7,0.82
 40772,Hazlo tu Mism@,Free Time,7,0.0
+40778,Bellezas Salvajes,Light,7,2.06
 40953,Daily Diva,Beauty and Health,7,1.64
 40962,Edukidz,Kids,7,1.64
 41029,Orgasmatron,Light,7,3.3
@@ -269,67 +378,202 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 41329,Zaaass Videos,Free Time,7,2.06
 41449,Viciosas XXX,Light,7,2.99
 41529,Gladiadores MMA,Free Time,7,2.06
+41533,Gay Mobile XXX,Light,7,2.99
 41589,EnglishPills,Education,7,1.64
 41593,Eurosalud,Beauty and Health,7,1.23
 41594,Eurosalud,Beauty and Health,7,0.0
+41597,Taromancia,Free Time,7,1.64
+41598,Taromancia,Free Time,7,0.0
+41601,Games Club,Games,7,2.47
+41603,Xtreme Movies,Light,7,2.99
 41633,Susc Sem Play2Me,Games,7,2.99
 41636,Juegos en tu movil,Games,7,2.99
 41638,Orgasmatron,Light,7,3.3
+41640,Mi Sex Video,Light,7,2.99
+41644,Natural Beauty,Beauty and Health,7,2.06
+41648,Vicious Cam,Light,7,3.49
 41650,Zaaass Videos,Free Time,7,2.06
 41652,Kids Tube,Kids,7,2.06
+41654,Fashion Bip,Beauty and Health,7,1.23
 41655,Fashion Bip,Beauty and Health,7,0.0
 41659,Gay Mobile XXX,Light,7,2.99
+41663,Digital Sin,Light,7,2.99
+41664,Digital Sin,Light,7,0.0
+41667,New Sensations,Light,7,2.99
+41671,Orgias,Light,7,2.99
 41675,Playhouse,Light,7,2.99
+41680,Por Culo,Light,7,2.99
+41692,Playboy,Light,7,2.99
+41696,Coto de Caza,Free Time,7,2.06
+41700,Hazlo tu Mism@,Free Time,7,0.82
+41701,Hazlo tu Mism@,Free Time,7,0.0
+41758,Mascotas,Free Time,7,1.23
 41759,Mascotas,Free Time,7,0.0
+41762,Enfermeras,Light,7,2.99
+41764,Tetonas,Light,7,2.99
+41766,Amateur,Light,7,2.99
+41788,Penthouse,Light,7,2.99
+41790,Tap To Fun,Games,7,1.99
+41792,Tap the stars,Free Time,7,1.99
+41794,Daily Diva,Beauty and Health,7,1.64
+41796,Fashion TV,Free Time,7,1.99
+41798,Top Video,Free Time,7,1.64
+41800,Game Shaker,Games,7,1.64
+41802,Edukidz,Kids,7,1.64
+41804, iTrip Viajes y +,Free Time,7,2.47
+41805, iTrip Viajes y +,Free Time,7,0.0
+41809,Chef Book Recetas,Free Time,7,2.47
+41810,Chef Book Recetas,Free Time,7,0.0
+41813,Taquilla X3,Light,7,2.99
+41815,Taquilla X4,Light,7,2.99
+41817,Taquilla X8,Light,7,2.99
+41820,Taquilla X9,Light,7,5.0
+41822,Taquilla X10,Light,7,2.99
 41824,Amigo Games,Games,7,0.99
 41825,Amigo Games,Games,7,0.0
 41909,The Tourist,Free Time,7,2.06
 41949,Top Video,Free Time,7,1.64
 42011,eXoticas,Light,7,1.23
 42049,Fun Planet,Games,7,1.99
+42069,Fun Planet,Games,7,1.99
 42071,Astro Futuro,Free Time,7,1.99
+42073,Astro Futuro,Free Time,7,1.99
 42076,Gamedroid,Games,7,1.64
+42078,Gamedroid,Games,7,1.64
+42332,Edmundo,Beauty and Health,7,
+42334,Edmundo,Beauty and Health,7,
 42339,Pocoyo House,Kids,7,2.06
+42341,Pocoyo House,Kids,7,2.06
+42371,Video Series,Free Time,7,
 42389,Little Smart Planet,Kids,7,1.23
+42390,Little Smart Planet,Kids,7,0.0
 42489,Puta Locura / Mr 69,Light,7,2.99
+42529,Porno Interactivo,Light,7,2.99
+42609,Parece De El Mundo Today,Free Time,7,1.64
 42689,Caillou y Amigos,Kids,7,2.06
+42691,Caillou y Amigos,Kids,7,0.0
 42709,Caillou y Amigos,Kids,7,2.06
+42712,Caillou y Amigos,Kids,7,0.0
+42869,Sex 360,Light,7,2.99
 42911,Sexducate con LB,Beauty and Health,7,1.64
+43089,Lifeselector,Light,7,
+43091,Noticias emocion,News,7,1.23
+43093,Deportes emocion,Sports,7,1.23
 43269,Playboy,Light,7,2.99
+43349,Sexducate con LB,Beauty and Health,7,1.64
+43429,VR Games,Games,7,1.23
+43549,Parece De El Mundo Today,Free Time,7,1.64
 43551,Movistar Juegos,Games,7,1.64
 43553,Movistar Juegos,Games,7,0.0
 43571,EnglishPills,Education,7,2.06
+43573,EnglishPills,Education,7,0.0
 43575,EnglishPills,Education,7,2.06
+43577,EnglishPills,Education,7,0.0
 43609,Comedy Factory,Free Time,7,2.47
 43611,Comedy Factory,Free Time,7,2.47
 43613,Videos Clap,Kids,7,2.47
 43615,Videos Clap,Kids,7,2.47
 43617,Videos Tribuu,Free Time,7,2.47
 43619,Videos Tribuu,Free Time,7,2.47
+43749,Deportes Emocion,Sports,7,1.23
+43751,Noticias emocion,News,7,1.23
 43789,Movistar Juegos,Games,30,0.0
 43869,Hello Kitty,Kids,30,6.19
 44009,Abaco,Education,7,1.64
 44029,Aula 365,Education,30,6.6
+44049,Hello Kitty,Kids,7,6.19
 44051,Slow Life,Beauty and Health,7,2.47
 44169,Tuneglish,Education,7,1.64
 44171,Bloomberg English,Free Time,7,1.23
 44190,Fit and Soul,Beauty and Health,7,2.06
+44269,Aire Fresco,Beauty and Health,7,1.64
 44409,Pink Crush,Light,7,2.99
+44469,Nubico eBooks,Nubico,30,5.99
+44471,Nubico Promos,Nubico,30,0.0
 44509,Cuaderno Magico,Kids,7,1.64
+44549,Noticias emocion,News,7,1.64
+44551,Deportes emocion,Sports,7,1.64
+44611,Soy Mujer,Beauty and Health,7,1.64
 44613,Soy Mujer,Beauty and Health,7,1.64
 44618,Kids Play,Kids,30,4.95
 44620,Kids Play,Kids,7,0.0
 44629,Life R Style,Beauty and Health,7,1.64
 44649,DocHuman,Education,7,1.64
+44689,Baby TV,Kids,7,0.82
+44709,Zona Z,Free Time,7,2.06
+44711,Tinder Emoción,Free Time,30,9.91
+44749,Spotify,Music,30,8.26
+44771,El Kiosko y Más,News,30,3.43
+44773,El Kiosko y Más,News,30,6.6
+44775,El Kiosko y Más,News,30,6.6
+44777,El Kiosko y Más,News,30,6.6
+44779,El Kiosko y Más,News,30,6.6
+44781,El Kiosko y Más,News,30,8.26
+44789,El Kiosko y Más,News,30,9.08
+44791,El Kiosko y Más,News,30,9.67
+44793,El Kiosko y Más,News,30,10.54
+44795,El Kiosko y Más,News,30,11.16
+44797,El Kiosko y Más,News,30,14.87
+44799,El Kiosko y Más,News,30,14.87
+44809,El Kiosko y Más,News,30,15.21
+44811,El Kiosko y Más,News,30,15.21
+44813,El Kiosko y Más,News,30,15.21
+44815,El Kiosko y Más,News,30,15.21
+44817,El Kiosko y Más,News,30,15.87
+44819,El Kiosko y Más,News,30,15.87
+44821,El Kiosko y Más,News,30,15.87
+44823,El Kiosko y Más,News,30,15.87
+44825,El Kiosko y Más,News,30,15.87
+44827,El Kiosko y Más,News,30,15.87
+44829,El Kiosko y Más,News,30,15.87
+44831,El Kiosko y Más,News,30,15.87
+44833,El Kiosko y Más,News,30,16.16
+44835,El Kiosko y Más,News,30,16.86
+44837,El Kiosko y Más,News,30,16.86
+44839,El Kiosko y Más,News,30,17.18
+44841,El Kiosko y Más,News,30,20.83
 44869,Tinder Emoción,Free Time,30,14.99
 44889,NBA League Pass,Sports,30,9.91
 44930,Cursos Miriadax,Education,99999,29.76
 44932,Cursos Miriadax,Education,99999,32.93
 44950,Go Music,Music,30,5.78
 45009,Tuneglish,Education,7,0.0
+45030,E-Komics,Free Time,7,2.06
+45069,Nubico Promo,Nubico,30,0.0
+45129,Storytel Audiolibros,Free Time,30,8.26
 45169,Decrash,Light,7,2.99
 45229,Nubico eBooks,Free Time,30,7.68
 45231,Nubico Promos,Free Time,30,0.0
+45233,Nubico Promos,Nubico,30,0.0
+45237,El Kiosko y Más,News,30,3.99
+45239,El Kiosko y Más,News,30,7.68
+45241,El Kiosko y Más,News,30,7.68
+45245,El Kiosko y Más,News,30,7.68
+45247,El Kiosko y Más,News,30,7.68
+45249,El Kiosko y Más,News,30,9.61
+45251,El Kiosko y Más,News,30,10.57
+45253,El Kiosko y Más,News,30,11.25
+45255,El Kiosko y Más,News,30,12.26
+45257,El Kiosko y Más,News,30,12.98
+45259,El Kiosko y Más,News,30,17.3
+45261,El Kiosko y Más,News,30,17.3
+45263,El Kiosko y Más,News,30,17.69
+45265,El Kiosko y Más,News,30,17.69
+45267,El Kiosko y Más,News,30,17.69
+45269,El Kiosko y Más,News,30,17.69
+45271,El Kiosko y Más,News,30,18.46
+45273,El Kiosko y Más,News,30,18.46
+45275,El Kiosko y Más,News,30,18.46
+45277,El Kiosko y Más,News,30,18.46
+45279,El Kiosko y Más,News,30,18.46
+45281,El Kiosko y Más,News,30,18.46
+45283,El Kiosko y Más,News,30,18.46
+45285,El Kiosko y Más,News,30,18.46
+45287,El Kiosko y Más,News,30,18.8
+45289,El Kiosko y Más,News,30,19.62
+45292,El Kiosko y Más,News,30,19.62
+45294,El Kiosko y Más,News,30,19.99
+45296,El Kiosko y Más,News,30,24.23
 45300,E-Komics,Free Time,7,1.91
 45309,Storytel Audiolibros,Free Time,30,8.64
 45329,Noticias emocion,News,7,1.15
@@ -344,22 +588,31 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 45347,Yo Mujer y +,Beauty and Health,7,0.95
 45349,Cuidate Mejor,Beauty and Health,7,0.95
 45351,El Mundo Al Revés,Free Time,7,1.91
+45353,El Mundo Al Revés,Free Time,7,1.91
 45355,Fashion Bip,Beauty and Health,7,1.43
 45357,Fashion Bip,Beauty and Health,7,1.43
 45359,Mascotas,Free Time,7,1.43
 45371,Vaughan,Education,30,6.6
 45389,Nubico Audiolibros,Free Time,30,5.76
+45391,Nubico Audiolibros Promo,Nubico,30,0.0
+45393,Nubico Audiolibros Promo,Nubico,30,0.0
 45431,Música Top,Music,7,2.89
+45433,Flix Olé,Free Time,30,6.6
+45449,Go Music,Music,30,0.0
 45489,Kidjo,Kids,30,7.02
 45530,Movistar Apple Music,Music,30,8.26
 45531,Movistar Apple Music,Music,90,0.0
+45570,Nubico ebooks 50% Promo,Nubico,30,3.84
 45589,Top Music Tv,Music,30,8.26
+45609,Top Music Tv,Music,30,0.0
 45629, Movistar Musica,Music,30,9.91
 45631, Movistar Musica,Music,30,0.0
 45633, Movistar Musica,Music,7,3.3
 45635, Movistar Musica,Music,7,0.0
 45637, Movistar Musica,Music,30,4.95
 45639, Movistar Musica,Music,30,0.0
+45641, Movistar Musica,Music,7,1.38
+45643, Movistar Musica,Music,7,0.0
 45649,Podimo Podcasts,Free Time,30,2.88
 45689,Escuela Masterchef,Free Time,30,7.4
 45749,Gameloft Kids,Games,30,7.43
@@ -372,6 +625,7 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 46071,PlayJoy,Games,30,6.6
 46109,Avast CleanUp,Free Time,30,5.36
 46111,Storytel Audiolibros,Free Time,30,8.64
+46129,Movistar Apple Music,Music,30,0.0
 46169,NBA League Pass,Sports,30,6.2
 46171,NBA League Pass,Sports,30,8.67
 46173,Podimo Podcasts,Free Time,30,0.0
