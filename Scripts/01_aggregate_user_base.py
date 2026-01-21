@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 Aggregate NBS Base data to calculate daily user base metrics.
-Generates two output files:
+Generates three output files:
 1. user_base_by_service.csv - Daily user base by service_name and tme_category
 2. user_base_by_category.csv - Daily user base by tme_category only
+3. user_base_by_cpc.csv - Daily user base by cpc only
 """
 
 import csv
@@ -17,6 +18,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 NBS_BASE_DIR = PROJECT_ROOT / "User_Base" / "NBS_BASE"
 SERVICE_OUTPUT = PROJECT_ROOT / "User_Base" / "user_base_by_service.csv"
 CATEGORY_OUTPUT = PROJECT_ROOT / "User_Base" / "user_base_by_category.csv"
+CPC_OUTPUT = PROJECT_ROOT / "User_Base" / "user_base_by_cpc.csv"
 
 def extract_date_from_filename(filename):
     """Extract date from filename format: YYYYMMDD_NBS_Base.csv and convert to YYYY-MM-DD"""
@@ -55,30 +57,24 @@ def map_category(category):
 def process_files():
     """Process all CSV files and aggregate data."""
 
-    # Data structures to hold all aggregations
-    # service_data: {(date, service_name, tme_category): user_base_count}
-    # category_data: {(date, tme_category): user_base_count}
     service_data = defaultdict(int)
     category_data = defaultdict(int)
+    cpc_data = defaultdict(int)
 
-    # Get all CSV files sorted by date
     nbs_path = Path(NBS_BASE_DIR)
     csv_files = sorted(nbs_path.glob("*.csv"))
 
     total_files = len(csv_files)
     print(f"Found {total_files} CSV files to process\n")
 
-    # Process each file
     for idx, csv_file in enumerate(csv_files, 1):
         filename = csv_file.name
         date = extract_date_from_filename(filename)
 
-        # Progress indicator
         if idx % 100 == 0 or idx == total_files:
             print(f"Processing {idx}/{total_files}: {filename}")
 
         try:
-            # Try UTF-8 first, fall back to Latin-1 if it fails
             encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
             file_opened = False
 
@@ -90,31 +86,31 @@ def process_files():
                         for row in reader:
                             service_name = row['service_name'].strip()
 
-                            # Skip excluded services
                             if should_exclude_service(service_name):
                                 continue
 
                             tme_category = row['tme_category'].strip()
                             count_val = int(float(row['count']))
+                            cpc = int(row['cpc'])
 
-                            # Map category to grouped category
                             mapped_category = map_category(tme_category)
 
-                            # Aggregate by service and category
                             service_key = (date, service_name, mapped_category)
                             service_data[service_key] += count_val
 
-                            # Aggregate by category only
                             category_key = (date, mapped_category)
                             category_data[category_key] += count_val
 
+                            cpc_key = (date, cpc)
+                            cpc_data[cpc_key] += count_val
+
                     file_opened = True
-                    break  # Successfully processed, exit encoding loop
+                    break
 
                 except UnicodeDecodeError:
                     if encoding == encodings[-1]:
-                        raise  # If last encoding fails, raise the error
-                    continue  # Try next encoding
+                        raise
+                    continue
 
             if not file_opened:
                 print(f"WARNING: Could not open {filename} with any encoding")
@@ -123,7 +119,8 @@ def process_files():
             print(f"ERROR processing {filename}: {e}")
             continue
 
-    return service_data, category_data
+    return service_data, category_data, cpc_data
+
 
 def write_service_output(service_data, output_file):
     """Write service aggregation to CSV file."""
@@ -157,35 +154,53 @@ def write_category_output(category_data, output_file):
 
     print(f"✓ Written {len(category_data)} records")
 
-def show_summary(service_output, category_output):
+def write_cpc_output(cpc_data, output_file):
+    """Write CPC aggregation to CSV file."""
+    print(f"\nWriting CPC aggregation to {output_file}...")
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        # Write header
+        f.write("date|cpc|User_Base\n")
+
+        # Sort by date, cpc
+        sorted_data = sorted(cpc_data.items())
+
+        for (date, cpc), user_base in sorted_data:
+            f.write(f"{date}|{cpc}|{user_base}\n")
+
+def show_summary(service_output, category_output, cpc_output):
     """Display summary statistics and samples."""
     print("\n" + "="*60)
     print("PROCESSING COMPLETE")
     print("="*60)
 
-    # File sizes
     service_size = os.path.getsize(service_output) / (1024 * 1024)
     category_size = os.path.getsize(category_output) / (1024 * 1024)
+    cpc_size = os.path.getsize(cpc_output) / (1024 * 1024)
 
     print(f"\nOutput Files:")
     print(f"  {service_output}: {service_size:.2f} MB")
     print(f"  {category_output}: {category_size:.2f} MB")
+    print(f"  {cpc_output}: {cpc_size:.2f} MB")
 
-    # Sample data from service file
     print(f"\n--- Sample from {service_output} (first 10 rows) ---")
     with open(service_output, 'r') as f:
         for i, line in enumerate(f):
             if i < 11:
                 print(line.rstrip())
 
-    # Sample data from category file
     print(f"\n--- Sample from {category_output} (first 10 rows) ---")
     with open(category_output, 'r') as f:
         for i, line in enumerate(f):
             if i < 11:
                 print(line.rstrip())
 
-    # Latest date sample
+    print(f"\n--- Sample from {cpc_output} (first 10 rows) ---")
+    with open(cpc_output, 'r') as f:
+        for i, line in enumerate(f):
+            if i < 11:
+                print(line.rstrip())
+
     print(f"\n--- Latest date from {category_output} ---")
     with open(category_output, 'r') as f:
         lines = f.readlines()
@@ -201,22 +216,18 @@ def main():
     print("="*60)
     print(f"Start time: {start_time.strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-    # Check if NBS_BASE directory exists
     if not os.path.exists(NBS_BASE_DIR):
         print(f"ERROR: Directory '{NBS_BASE_DIR}' not found!")
         return
 
-    # Process all files
-    service_data, category_data = process_files()
+    service_data, category_data, cpc_data = process_files()
 
-    # Write output files
     write_service_output(service_data, SERVICE_OUTPUT)
     write_category_output(category_data, CATEGORY_OUTPUT)
+    write_cpc_output(cpc_data, CPC_OUTPUT)
 
-    # Show summary
-    show_summary(SERVICE_OUTPUT, CATEGORY_OUTPUT)
+    show_summary(SERVICE_OUTPUT, CATEGORY_OUTPUT, CPC_OUTPUT)
 
-    # Execution time
     end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()
     print(f"\nExecution time: {duration:.2f} seconds")
