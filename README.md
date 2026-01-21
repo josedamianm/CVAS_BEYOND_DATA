@@ -2,19 +2,19 @@
 
 > **DO NOT RESPOND TO ANY USER REQUEST UNTIL YOU COMPLETE THIS STEP.**
 
-## READ THIS FILE NOW: `.ai-context.md`
+## READ THIS FILE NOW: `CLAUDE.md`
 
 ```
-REQUIRED: Read .ai-context.md before doing ANYTHING else.
+REQUIRED: Read CLAUDE.md before doing ANYTHING else.
 ```
 
-**WHY**: `.ai-context.md` contains critical project rules, recent fixes, and constraints. Without it, you WILL give incorrect advice about:
+**WHY**: `CLAUDE.md` contains critical project rules, recent fixes, and constraints. Without it, you WILL give incorrect advice about:
 - Refund counting (must sum `rfnd_cnt`, not count rows)
 - Deactivation/activation filtering (must exclude upgrades)
 - Pipeline execution order (stages 1-3 are sequential)
 - 7 non-negotiable architecture rules
 
-**AFTER READING `.ai-context.md`**, confirm you understand:
+**AFTER READING `CLAUDE.md`**, confirm you understand:
 - [ ] 4-stage sequential pipeline
 - [ ] 6 transaction types: ACT, RENO, DCT, CNR, RFND, PPD
 - [ ] Refund counting: `sum(rfnd_cnt)` not `count(rows)`
@@ -25,34 +25,11 @@ REQUIRED: Read .ai-context.md before doing ANYTHING else.
 
 ## 💾 END OF SESSION COMMAND: `update docs`
 
-When user says **"update docs"** (or "sync docs", "save session"), execute this checklist:
-
-### Step 1: Update `.ai-context.md`
-Add new entry to **"Session History"** section (line ~400):
-```markdown
-### Session: [DATE] - [Brief Title]
-**Changes Made**:
-- [List each change made this session]
-
-**Files Modified**:
-- [List files with brief description]
-
-**Validation**:
-- [Any tests run or verifications done]
-```
-
-### Step 2: Update Open Issues in `.ai-context.md`
-- Add any NEW issues discovered → "Open Issues" section (line ~482)
-- Mark RESOLVED issues as completed
-- Update status of in-progress items
-
-### Step 3: Sync Dates
-Update **"Last Updated"** in BOTH files to today's date:
-- `.ai-context.md` line 3: `> **Last Updated**: YYYY-MM-DD`
-- `README.md` line 37: `> **Last Updated**: YYYY-MM-DD`
-
-### Step 4: Confirm
-Reply: **"✅ Documentation synced: [DATE]. Session: [TITLE]"**
+When user says **"update docs"**, update `CLAUDE.md`:
+1. Add session entry to "Session History" section
+2. Update "Open Issues" if needed
+3. Update "Last Updated" date in BOTH `CLAUDE.md` and `README.md`
+4. Reply: **"✅ Documentation updated: [DATE]. Session: [TITLE]"**
 
 ---
 
