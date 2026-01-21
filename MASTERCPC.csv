@@ -141,7 +141,7 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 30295,Especial Coños,Light,99999,3.0
 30471,Club de Intercambios,Light,99999,3.0
 30475,Sexo Casero,Light,99999,3.0
-30710,"Movistar Juegos – EA 0,99e",Games,7,0.99
+30710,Movistar Juegos EA 099e,Games,7,0.99
 30714,"TP Seman EA 0,99e",Games,7,0.99
 30791,Aficionados Españoles,Light,99999,3.0
 30880,Susc Real Network,Games,30,3.0
@@ -605,14 +605,14 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 45570,Nubico ebooks 50% Promo,Nubico,30,3.84
 45589,Top Music Tv,Music,30,8.26
 45609,Top Music Tv,Music,30,0.0
-45629, Movistar Musica,Music,30,9.91
-45631, Movistar Musica,Music,30,0.0
-45633, Movistar Musica,Music,7,3.3
-45635, Movistar Musica,Music,7,0.0
-45637, Movistar Musica,Music,30,4.95
-45639, Movistar Musica,Music,30,0.0
-45641, Movistar Musica,Music,7,1.38
-45643, Movistar Musica,Music,7,0.0
+45629,Movistar Musica,Music,30,9.91
+45631,Movistar Musica,Music,30,0.0
+45633,Movistar Musica,Music,7,3.3
+45635,Movistar Musica,Music,7,0.0
+45637,Movistar Musica,Music,30,4.95
+45639,Movistar Musica,Music,30,0.0
+45641,Movistar Musica,Music,7,1.38
+45643,Movistar Musica,Music,7,0.0
 45649,Podimo Podcasts,Free Time,30,2.88
 45689,Escuela Masterchef,Free Time,30,7.4
 45749,Gameloft Kids,Games,30,7.43
@@ -651,8 +651,8 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 46311,Qello Concerts,Music,7,0.0
 46313,Yokee Karaoke,Music,30,8.26
 46315,Yokee Karaoke,Music,7,0.0
-46329, Movistar Musica,Music,30,9.91
-46331, Movistar Musica,Music,30,0.0
+46329,Movistar Musica,Music,30,9.91
+46331,Movistar Musica,Music,30,0.0
 46349,Smile & Learn,Kids,1,0.0
 46369,Abaco Kids,Education,7,1.64
 46389,XR Academy,Education,30,7.02
