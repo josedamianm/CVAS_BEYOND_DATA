@@ -1,6 +1,6 @@
 # CVAS Beyond Data - Telecommunications ETL Pipeline
 
-> **Last Updated**: 2026-02-14
+> **Last Updated**: 2026-01-21
 >
 > **AI Agents**: Read `CLAUDE.md` for complete context, rules, and session history
 
@@ -66,13 +66,14 @@
 │                                                                               │
 │  1.GET_NBS_BASE.sh → Scripts/01_aggregate_user_base.py                      │
 │  ├─ Extracts: NBS_Base.csv from Nova PostgreSQL (via SCP)                   │
-│  ├─ Transforms: Aggregates by service and category                          │
+│  ├─ Transforms: Aggregates by service, category, and CPC                    │
 │  │   • Excludes: nubico, challenge arena, movistar apple music              │
 │  │   • Maps: education/images → Edu_Ima, news/sports → News_Sport          │
 │  └─ Loads:                                                                   │
 │      • User_Base/YYYYMMDD_NBS_Base.csv (raw snapshot)                       │
 │      • User_Base/user_base_by_service.csv (service-level aggregation)       │
 │      • User_Base/user_base_by_category.csv (category-level aggregation)     │
+│      • User_Base/user_base_by_cpc.csv (CPC-level aggregation)               │
 │                                                                               │
 └──────────────────────────────────────────────────────────────────────────────┘
                                       ↓
@@ -278,7 +279,8 @@ CVAS_BEYOND_DATA/
 │   ├── NBS_BASE/
 │   │   └── YYYYMMDD_NBS_Base.csv
 │   ├── user_base_by_service.csv
-│   └── user_base_by_category.csv
+│   ├── user_base_by_category.csv
+│   └── user_base_by_cpc.csv
 │
 ├── Counters/                            # Counter outputs (gitignored)
 │   ├── Counters_CPC.parquet             # Historical CPC-level counters
@@ -296,20 +298,21 @@ CVAS_BEYOND_DATA/
 ## 🚀 Pipeline Stages
 
 ### Stage 0: Generate CPC Metadata (Manual)
-**Script**: `0.GET_MASTERCPC_CSV.py`  
-**Trigger**: Manual execution when CPC master files are updated  
-**Purpose**: Generate `MASTERCPC.csv` from Excel master files  
-**Output**: `MASTERCPC.csv` (cpc, service_name, tme_category, cpc_period, cpc_price)  
+**Script**: `0.GET_MASTERCPC_CSV.py`
+**Trigger**: Manual execution when CPC master files are updated
+**Purpose**: Generate `MASTERCPC.csv` from Excel master files
+**Output**: `MASTERCPC.csv` (cpc, service_name, tme_category, cpc_period, cpc_price)
 **Special Logic**: Sets `cpc_period=99999` for PPD transactions
 
 ### Stage 1: Extract User Base (8:05 AM)
-**Script**: `1.GET_NBS_BASE.sh` → `Scripts/01_aggregate_user_base.py`  
-**Duration**: ~5 minutes  
-**Purpose**: Fetch and aggregate daily user base snapshot  
+**Script**: `1.GET_NBS_BASE.sh` → `Scripts/01_aggregate_user_base.py`
+**Duration**: ~5 minutes
+**Purpose**: Fetch and aggregate daily user base snapshot
 **Outputs**:
 - `User_Base/NBS_BASE/YYYYMMDD_NBS_Base.csv` (raw snapshot)
 - `User_Base/user_base_by_service.csv` (service-level aggregation)
 - `User_Base/user_base_by_category.csv` (category-level aggregation)
+- `User_Base/user_base_by_cpc.csv` (CPC-level aggregation)
 
 ### Stage 2: Extract Transactions (8:25 AM)
 **Script**: `2.FETCH_DAILY_DATA.sh` → `Scripts/02_fetch_remote_nova_data.sh`  
