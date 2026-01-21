@@ -1,6 +1,6 @@
 # 🚨 AI CONTEXT - READ THIS FILE FIRST
 
-> **Last Updated**: 2026-01-21
+> **Last Updated**: 2026-02-15
 > **Project**: CVAS Beyond Data - Telecommunications ETL Pipeline
 > **Purpose**: Complete AI agent context, rules, schemas, and session history
 
@@ -37,7 +37,7 @@
 
 ## 🖥️ System Information
 
-- **Last Updated**: 2026-01-21
+- **Last Updated**: 2026-02-15
 - **Primary Agent**: Abacus AI Desktop (Claude Sonnet 4.5)
 - **Project Root**: `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
 - **Python Environment**: `/opt/anaconda3/bin/python` (absolute path required for launchd)
@@ -636,6 +636,20 @@ print(cpc_counters.filter(pl.col('date') == '2025-12-01'))
 > - [Tests run or verifications]
 > ```
 > Then update "Last Updated" dates in both `CLAUDE.md` and `README.md`, and reply: **"✅ Documentation updated"**
+
+### Session: 2026-02-15 - MASTERCPC Service Name Corrections
+**Changes Made**:
+- Fixed typo in service name: "Movistar Juegos – EA 0,99e" → "Movistar Juegos EA 099e"
+- Removed leading space from "Movistar Musica" service name: " Movistar Musica" → "Movistar Musica"
+
+**Files Modified**:
+- `MASTERCPC.csv` - Corrected service name typos
+
+**Action Required**:
+- Run `./4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force` to regenerate counters with corrected names
+
+**Validation**:
+- Confirmed MASTERCPC.csv only affects Stage 4 (counter generation) ✅
 
 ### Session: 2026-02-14 - Complete Documentation Rewrite
 **Changes Made**:
