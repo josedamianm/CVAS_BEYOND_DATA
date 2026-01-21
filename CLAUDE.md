@@ -1,88 +1,106 @@
 # 🚨 AI CONTEXT - READ THIS FILE FIRST
 
-> **Last Updated**: 2025-01-28
+> **Last Updated**: 2026-02-14
+> **Project**: CVAS Beyond Data - Telecommunications ETL Pipeline
+> **Purpose**: Complete AI agent context, rules, schemas, and session history
 
 ---
 
-## MANDATORY FIRST ACTIONS
+## ⛔ MANDATORY FIRST ACTIONS
 
-**You are reading CLAUDE.md. Before responding:**
-// ... existing code ...
-## System Information
-- **Last Updated**: February 14, 2026
-- **Primary Agent**: Abacus AI Desktop (Gemini 3 Pro)
+**Before responding to ANY user request:**
+
+1. **Read this entire file** (CLAUDE.md) - Contains critical rules and complete context
+2. **Read `README.md`** - Contains project overview and human-readable documentation
+3. **Then respond** to the user's request
+
+**DO NOT skip these steps. DO NOT just acknowledge. EXECUTE them.**
+
+---
+
+## 📋 Table of Contents
+
+1. [System Information](#system-information)
+2. [Project Overview](#project-overview)
+3. [Critical Architecture Constraints](#critical-architecture-constraints)
+4. [Data Schemas](#data-schemas)
+5. [File Locations & Structure](#file-locations--structure)
+6. [Business Logic Rules](#business-logic-rules)
+7. [Quick Start Commands](#quick-start-commands)
+8. [Troubleshooting Guide](#troubleshooting-guide)
+9. [Session History](#session-history)
+10. [Open Issues & TODOs](#open-issues--todos)
+11. [Key Concepts & Domain Knowledge](#key-concepts--domain-knowledge)
+12. [Validation & Metrics](#validation--metrics)
+
+---
+
+## 🖥️ System Information
+
+- **Last Updated**: 2026-02-14
+- **Primary Agent**: Abacus AI Desktop (Claude Sonnet 4.5)
 - **Project Root**: `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
-- **Python Environment**: `/opt/anaconda3/bin/python`
+- **Python Environment**: `/opt/anaconda3/bin/python` (absolute path required for launchd)
+- **Remote Server**: `omadmin@10.26.82.53` (Nova PostgreSQL)
+- **Scheduler**: macOS launchd (8:05 AM - 9:30 AM daily)
 
-// ... existing code ...
-### 3. File Structure
-- **Root Scripts**:
-  - `1.GET_NBS_BASE.sh`: Fetches user base data.
-  - `2.FETCH_DAILY_DATA.sh`: Fetches daily transactions.
-  - `3.PROCESS_DAILY_AND_BUILD_VIEW.sh`: Processes data and builds view.
-  - `4.BUILD_TRANSACTION_COUNTERS.sh`: Builds counters.
-  - `Scripts/00_convert_historical.py`: Setup/Maintenance tool to convert historical CSVs to Parquet.
-- **Data Directories**:
-  - `Daily_Data/`: Raw daily CSVs.
-  - `Parquet_Data/`: Processed Parquet files (Hive partitioned).
-  - `User_Base/`: User base aggregations.
-- **Configuration**:
-  - `MASTERCPC.csv`: CPC to Service/Category mapping.
+---
 
-// ... existing code ...
+## 🎯 Project Overview
 
-### 6. Data Schemas
-#### Transaction Types (Polars Schema)
-- **ACT**: `tmuserid, msisdn, cpc, trans_type_id, channel_id, channel_act, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id`
-- **RENO**: `tmuserid, msisdn, cpc, trans_type_id, channel_id, channel_act, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id`
-- **DCT**: `tmuserid, msisdn, cpc, trans_type_id, channel_dct, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id`
-- **CNR**: `cancel_date, sbn_id, tmuserid, cpc, mode`
-- **RFND**: `tmuserid, cpc, refnd_date, rfnd_amount, rfnd_cnt, sbnid, instant_rfnd`
-- **PPD**: `tmuserid, msisdn, cpc, trans_type_id, channel_id, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id, rev`
+### What This Pipeline Does
 
-#### Configuration Files
-- **MASTERCPC.csv**: `cpc` (int), `service_name` (str), `tme_category` (str), `cpc_period` (int), `cpc_price` (float)
+**CVAS Beyond Data** is a production ETL pipeline that:
+1. Extracts subscription transaction data from remote PostgreSQL (Nova)
+2. Transforms CSV data into optimized Parquet format with Hive partitioning
+3. Loads data into analytical storage for business intelligence
+4. Generates daily transaction counters by CPC and service
 
-#### Output Schemas
-// ... existing code ...
+### Pipeline Architecture (4 Stages + 1 Setup)
 
-│   └── utils/
-│       ├── counter_utils.py             # Counter utilities
-│       └── log_rotation.sh              # Log management
-├── sql/
-│   └── build_subscription_view.sql      # DuckDB aggregation query
-├── Daily_Data/                          # Daily CSV files (gitignored)
-├── Parquet_Data/                        # Parquet storage (gitignored)
-│   └── transactions/
-│       ├── act/year_month=*/
-│       ├── reno/year_month=*/
-│       ├── dct/year_month=*/
-│       ├── cnr/year_month=*/
-│       ├── rfnd/year_month=*/
-│       └── ppd/year_month=*/
-├── User_Base/                           # User base snapshots (gitignored)
-├── Counters/                            # Counter outputs (gitignored)
-│   ├── Counters_CPC.parquet
-│   └── Counters_Service.csv
-└── Logs/                                # Pipeline logs (gitignored)
 ```
+Stage 0 (Manual): Generate MASTERCPC.csv from Excel master files
+    ↓
+Stage 1 (8:05 AM): Fetch user base snapshot from Nova → User_Base/
+    ↓
+Stage 2 (8:25 AM): Fetch 6 transaction types from Nova → Daily_Data/
+    ↓
+Stage 3 (8:30 AM): Convert CSVs to Parquet + Build subscription view → Parquet_Data/
+    ↓
+Stage 4 (9:30 AM): Build transaction counters → Counters/
+```
+
+### Technology Stack
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| Data Processing | Python 3.x + Polars | High-performance DataFrame operations |
+| SQL Aggregation | DuckDB | In-process OLAP for subscription views |
+| Storage Format | Parquet (SNAPPY) | Columnar compression, Hive partitioning |
+| Data Source | PostgreSQL | Remote Nova server |
+| Orchestration | Bash Scripts | Pipeline stage coordination |
+| Scheduler | macOS launchd | Automated daily execution |
 
 ---
 
 ## 🚨 CRITICAL ARCHITECTURE CONSTRAINTS (NON-NEGOTIABLE)
 
 ### 1. Sequential Pipeline Dependency (NEVER BREAK)
-**RULE**: Scripts MUST execute in strict order. Each depends on the previous completing successfully.
+
+**RULE**: Stages 1→2→3 MUST execute in strict order. Each depends on the previous completing successfully.
 
 ```
 1.GET_NBS_BASE.sh → 2.FETCH_DAILY_DATA.sh → 3.PROCESS_DAILY_AND_BUILD_VIEW.sh → 4.BUILD_TRANSACTION_COUNTERS.sh
 ```
 
-**Why**: Script 2 needs yesterday's data. Script 3 needs all 6 transaction CSV files from Script 2. Script 4 needs Parquet transaction data from Script 3.
+**Why**:
+- Stage 2 needs yesterday's date (determined by Stage 1 timing)
+- Stage 3 needs all 6 transaction CSV files from Stage 2
+- Stage 4 needs Parquet transaction data from Stage 3
 
 **DO NOT**:
 - ❌ Make scripts independent
-- ❌ Add parallel execution
+- ❌ Add parallel execution for Stages 1-3
 - ❌ Remove dependency validation
 - ❌ Change execution order
 
@@ -92,83 +110,111 @@
 - ✅ Exit with error if prerequisites missing
 
 ### 2. Six Transaction Types (NEVER CHANGE COUNT)
+
 **RULE**: Exactly 6 transaction types must be processed. Adding/removing types breaks the entire pipeline.
 
 ```
 ACT, RENO, DCT, CNR, RFND, PPD
 ```
 
-**Why**: DuckDB aggregation query expects all 6. Missing types cause SQL failures.
+**Why**: DuckDB aggregation query (`sql/build_subscription_view.sql`) expects all 6. Missing types cause SQL failures.
 
 ### 3. Directory Structure (IMMUTABLE)
+
 **RULE**: Never modify the directory structure. Scripts use relative paths from project root.
 
+**Critical Paths**:
+- `Daily_Data/` - Daily CSV files
+- `Parquet_Data/transactions/{type}/year_month=*/` - Hive-partitioned Parquet
+- `User_Base/` - User base snapshots
+- `Counters/` - Counter outputs
+- `Logs/` - Pipeline logs
+
 ### 4. Strict Schema Enforcement (NON-NEGOTIABLE)
-**RULE**: All Parquet files must follow exact schemas. Schema violations cause aggregation failures.
+
+**RULE**: All Parquet files must follow exact Polars schemas defined in `Scripts/03_process_daily.py`. Schema violations cause aggregation failures.
+
+**Schema Locations**:
+- ACT/RENO/PPD: 15 columns (with `rev`)
+- DCT: 13 columns (no `rev`, has `channel_dct`)
+- CNR: 5 columns
+- RFND: 7 columns (includes `rfnd_cnt`)
 
 ### 5. Hive Partitioning (REQUIRED FOR PERFORMANCE)
+
 **RULE**: All transaction Parquet files MUST use Hive partitioning by `year_month=YYYY-MM`.
 
+**Format**: `Parquet_Data/transactions/{type}/year_month=2025-02/*.parquet`
+
+**Why**: Enables partition pruning for efficient date-range queries.
+
 ### 6. Absolute Python Path (LAUNCHD REQUIREMENT)
+
 **RULE**: All Python scripts called from launchd MUST use absolute path: `/opt/anaconda3/bin/python`
 
+**Why**: launchd doesn't inherit shell environment variables. Relative paths fail.
+
 ### 7. No PII in Logs (SECURITY)
+
 **RULE**: NEVER log `tmuserid` or `msisdn` in automated processes. Only in manual debugging.
 
----
+**Why**: Data privacy compliance.
 
-## 🔧 Recent Fixes & Changes
+### 8. Refund Count Logic (CRITICAL)
 
-### 1. ✅ Refund Count Logic Fixed (Jan 18, 2026)
-**Issue**: `rfnd_count` was counting rows instead of summing the `rfnd_cnt` column, causing undercounting.
+**RULE**: Refund counts MUST sum the `rfnd_cnt` column, NOT count rows.
 
-**Root Cause**:
-- `rfnd_atlas.csv` contains aggregated refund data where one row can represent multiple refunds
-- The `rfnd_cnt` column stores the actual number of refunds per row
-- Previous logic: `len(rfnd_df)` → counted rows
-- Correct logic: `rfnd_df['rfnd_cnt'].sum()` → sums actual refund counts
+**Why**: `rfnd_atlas.csv` contains aggregated data where one row can represent multiple refunds.
 
-**Files Modified**:
-- `Scripts/05_build_counters.py:compute_daily_cpc_counts()` - Changed aggregation logic
-- `Scripts/utils/counter_utils.py:load_transactions_for_date()` - Ensured `rfnd_cnt` column is loaded
+**Correct**: `pl.col('rfnd_cnt').sum()`  
+**Incorrect**: `len(rfnd_df)` or `count(rows)`
 
-**Validation**:
-- Beauty & Health Dec 2025: **7,001 refunds** (was 737) ✅
-- Amount: **€15,033.93** (was €8,959.41) ✅
+### 9. Upgrade Exclusion (CRITICAL)
 
-### 2. ✅ Parquet Data Regeneration (Jan 18, 2026)
-**Issue**: `Parquet_Data/transactions/rfnd` was outdated and missing 436 rows for Dec 2025.
+**RULE**: 
+- Activations: Exclude `channel_act = 'UPGRADE'`
+- Deactivations: Exclude `channel_dct = 'UPGRADE'`
 
-**Root Cause**:
-- Historical conversion script `Scripts/00_convert_historical.py` hadn't been run after recent `rfnd_atlas.csv` updates
-- Parquet files were stale compared to source CSVs
-
-**Solution**:
-- Re-ran `Scripts/00_convert_historical.py` to regenerate all parquet files from `rfnd_atlas.csv`
-- Verified completeness: 1,173 rows, 7,001 refunds, €15,033.93 for Beauty & Health Dec 2025 ✅
-
-### 3. ✅ Deactivation Count Logic (Previously Fixed)
-**Issue**: `dct_count` was including upgrade deactivations, inflating the count.
-
-**Solution**:
-- Filter out `channel_dct == 'UPGRADE'` when counting deactivations
-- Track upgrade deactivations separately in `upg_dct_count`
+**Why**: Upgrades are tracked separately in `upg_count` and `upg_dct_count`. Including them in regular counts inflates metrics.
 
 ---
 
 ## 📊 Data Schemas
 
-### Transaction Types
+### Transaction Types (Polars Schemas)
 
-#### ACT/RENO/PPD (15 columns - with revenue):
+#### ACT (Activations) - 15 columns
+```python
+{
+    'tmuserid': pl.Utf8,           # User ID (PII - don't log)
+    'msisdn': pl.Utf8,             # Phone number (PII - don't log)
+    'cpc': pl.Int64,               # Content Provider Code
+    'trans_type_id': pl.Int64,     # Transaction type (0=new, 1=upgrade)
+    'channel_id': pl.Int64,        # Channel ID
+    'channel_act': pl.Utf8,        # Channel name (e.g., 'UPGRADE', 'WEB', 'SMS')
+    'trans_date': pl.Datetime,     # Transaction date
+    'act_date': pl.Datetime,       # Activation date
+    'reno_date': pl.Datetime,      # Renewal date
+    'camp_name': pl.Utf8,          # Campaign name
+    'tef_prov': pl.Int64,          # Telefonica provider
+    'campana_medium': pl.Utf8,     # Campaign medium
+    'campana_id': pl.Utf8,         # Campaign ID
+    'subscription_id': pl.Int64,   # PRIMARY KEY
+    'rev': pl.Float64              # Revenue
+}
+```
+
+#### RENO (Renewals) - 15 columns
+Same schema as ACT.
+
+#### DCT (Deactivations) - 13 columns
 ```python
 {
     'tmuserid': pl.Utf8,
     'msisdn': pl.Utf8,
     'cpc': pl.Int64,
     'trans_type_id': pl.Int64,
-    'channel_id': pl.Int64,
-    'channel_act': pl.Utf8,
+    'channel_dct': pl.Utf8,        # Deactivation channel (note: channel_dct, not channel_act)
     'trans_date': pl.Datetime,
     'act_date': pl.Datetime,
     'reno_date': pl.Datetime,
@@ -176,149 +222,315 @@ ACT, RENO, DCT, CNR, RFND, PPD
     'tef_prov': pl.Int64,
     'campana_medium': pl.Utf8,
     'campana_id': pl.Utf8,
-    'subscription_id': pl.Int64,  # PRIMARY KEY
-    'rev': pl.Float64
+    'subscription_id': pl.Int64    # PRIMARY KEY
+    # NO 'rev' column
 }
 ```
 
-#### DCT (13 columns - no revenue):
-```python
-# Same as ACT minus 'rev', plus:
-{'channel_dct': pl.Utf8}
-```
-
-#### CNR (5 columns):
+#### CNR (Cancellations) - 5 columns
 ```python
 {
     'cancel_date': pl.Datetime,
-    'sbn_id': pl.Int64,  # subscription_id
+    'sbn_id': pl.Int64,            # subscription_id
     'tmuserid': pl.Utf8,
     'cpc': pl.Int64,
-    'mode': pl.Utf8
+    'mode': pl.Utf8                # Cancellation mode
 }
 ```
 
-#### RFND (7 columns):
+#### RFND (Refunds) - 7 columns
 ```python
 {
     'tmuserid': pl.Utf8,
     'cpc': pl.Int64,
     'refnd_date': pl.Datetime,
     'rfnd_amount': pl.Float64,
-    'rfnd_cnt': pl.Int64,  # CRITICAL: Sum this, don't count rows!
-    'sbnid': pl.Int64,  # subscription_id
-    'instant_rfnd': pl.Utf8
+    'rfnd_cnt': pl.Int64,          # CRITICAL: Sum this, don't count rows!
+    'sbnid': pl.Int64,             # subscription_id
+    'instant_rfnd': pl.Utf8        # Instant refund flag
 }
 ```
 
-### Counter Schemas
+#### PPD (Prepaid) - 15 columns
+```python
+{
+    'tmuserid': pl.Utf8,
+    'msisdn': pl.Utf8,
+    'cpc': pl.Int64,
+    'trans_type_id': pl.Int64,
+    'channel_id': pl.Int64,
+    'trans_date': pl.Datetime,
+    'act_date': pl.Datetime,
+    'reno_date': pl.Datetime,
+    'camp_name': pl.Utf8,
+    'tef_prov': pl.Int64,
+    'campana_medium': pl.Utf8,
+    'campana_id': pl.Utf8,
+    'subscription_id': pl.Int64,
+    'rev': pl.Float64
+    # NO 'channel_act' column
+}
+```
 
-#### Counters_CPC.parquet (13 columns):
+### Configuration Files
+
+#### MASTERCPC.csv - 5 columns
+```csv
+cpc,service_name,tme_category,cpc_period,cpc_price
+893,La Gruta del Sexo,Light,7,2.99
+928,Gofresh logos,Images,30,2.0
+3109,MoviMessenger,Free Time,30,
+```
+
+**Special Rules**:
+- PPD transactions: `cpc_period = 99999` (set by `0.GET_MASTERCPC_CSV.py`)
+- No quotes in CSV output (`quote_style='never'`)
+
+### Output Schemas
+
+#### Counters_CPC.parquet - 13 columns
 ```python
 {
     'date': pl.Date,
     'cpc': pl.Int64,
-    'act_count': pl.Int64,      # Non-upgrade activations (channel_act != 'UPGRADE')
-    'act_free': pl.Int64,       # Free non-upgrade activations (rev=0, channel_act != 'UPGRADE')
-    'act_pay': pl.Int64,        # Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE')
-    'upg_count': pl.Int64,      # Upgrade activations (channel_act == 'UPGRADE')
-    'reno_count': pl.Int64,
-    'dct_count': pl.Int64,
-    'upg_dct_count': pl.Int64,  # Upgrade deactivations (channel_dct == 'UPGRADE')
-    'cnr_count': pl.Int64,
-    'ppd_count': pl.Int64,
-    'rfnd_count': pl.Int64,
-    'rfnd_amount': pl.Float64,
-    'rev': pl.Float64,
-    'last_updated': pl.Datetime
+    'act_count': pl.Int64,         # Non-upgrade activations (channel_act != 'UPGRADE')
+    'act_free': pl.Int64,          # Free non-upgrade activations (rev=0, channel_act != 'UPGRADE')
+    'act_pay': pl.Int64,           # Paid non-upgrade activations (rev>0, channel_act != 'UPGRADE')
+    'upg_count': pl.Int64,         # Upgrade activations (channel_act == 'UPGRADE')
+    'reno_count': pl.Int64,        # Renewals
+    'dct_count': pl.Int64,         # Non-upgrade deactivations (channel_dct != 'UPGRADE')
+    'upg_dct_count': pl.Int64,     # Upgrade deactivations (channel_dct == 'UPGRADE')
+    'cnr_count': pl.Int64,         # Cancellations
+    'ppd_count': pl.Int64,         # Prepaid transactions
+    'rfnd_count': pl.Int64,        # Refund count (SUM of rfnd_cnt column)
+    'rfnd_amount': pl.Float64,     # Total refund amount
+    'rev': pl.Float64,             # Total revenue
+    'last_updated': pl.Datetime    # Timestamp of last update
 }
 ```
 
-#### Counters_Service.csv (19 columns):
+#### Counters_Service.csv - 18 columns
+```csv
+date,service_name,tme_category,cpc,cpc_period,cpc_price,act_count,act_free,act_pay,upg_count,reno_count,dct_count,upg_dct_count,cnr_count,ppd_count,rfnd_count,rfnd_amount,rev
 ```
-date, service_name, tme_category, cpc, cpc_period, cpc_price, act_count, act_free,
-act_pay, upg_count, reno_count, dct_count, upg_dct_count, cnr_count, ppd_count,
-rfnd_count, rfnd_amount, rev, last_updated
+
+**Note**: This is CPC-level data with service metadata joined, NOT aggregated by service.
+
+#### User Base Outputs
+
+**user_base_by_service.csv**:
+```csv
+date|service_name|tme_category|User_Base
+```
+
+**user_base_by_category.csv**:
+```csv
+date|tme_category|User_Base
 ```
 
 ---
 
-## 🗂️ Critical File Locations
+## 📁 File Locations & Structure
 
-### Data Sources
-```
-/Users/josemanco/Dropbox/BEYOND_DATA_OLD_backup/
-├── Historical_Data/
-│   ├── act_atlas.csv
-│   ├── rfnd_atlas.csv      ← Primary refund source (historical)
-│   ├── cnr_atlas.csv
-│   ├── reno_atlas.csv
-│   ├── dct_atlas.csv
-│   └── ppd_atlas.csv
-└── Daily_Data/
-    ├── act_atlas_day.csv
-    ├── rfnd_atlas_day.csv   ← Daily refund updates
-    └── ... (other daily CSVs)
-```
+### Root Scripts
+
+| Script | Purpose | Trigger |
+|--------|---------|---------|
+| `0.GET_MASTERCPC_CSV.py` | Generate MASTERCPC.csv from Excel | Manual (when master files update) |
+| `1.GET_NBS_BASE.sh` | Fetch user base snapshot | launchd (8:05 AM) |
+| `2.FETCH_DAILY_DATA.sh` | Fetch 6 transaction types | launchd (8:25 AM) |
+| `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` | Transform & load | launchd (8:30 AM) |
+| `4.BUILD_TRANSACTION_COUNTERS.sh` | Build counters | launchd (9:30 AM) |
 
 ### Processing Scripts
+
+| Script | Called By | Purpose |
+|--------|-----------|---------|
+| `Scripts/00_convert_historical.py` | Manual | Convert historical CSVs to Parquet |
+| `Scripts/01_aggregate_user_base.py` | Stage 1 | Aggregate user base by service/category |
+| `Scripts/02_fetch_remote_nova_data.sh` | Stage 2 | Fetch data from remote PostgreSQL |
+| `Scripts/03_process_daily.py` | Stage 3 | Convert daily CSVs to Parquet |
+| `Scripts/04_build_subscription_view.py` | Stage 3 | Build subscription lifecycle view |
+| `Scripts/05_build_counters.py` | Stage 4 | Generate transaction counters |
+
+### Utility Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `Scripts/utils/counter_utils.py` | Counter helper functions |
+| `Scripts/utils/log_rotation.sh` | Log management (15-day retention) |
+
+### SQL Files
+
+| File | Purpose |
+|------|---------|
+| `sql/build_subscription_view.sql` | DuckDB query for subscription lifecycle aggregation |
+
+### Data Directories
+
+| Directory | Contents | Gitignored |
+|-----------|----------|------------|
+| `Daily_Data/` | Daily CSV files from Stage 2 | Yes |
+| `Parquet_Data/transactions/` | Hive-partitioned Parquet files | Yes |
+| `Parquet_Data/aggregated/` | Subscription lifecycle view | Yes |
+| `User_Base/` | User base snapshots and aggregations | Yes |
+| `Counters/` | Transaction counter outputs | Yes |
+| `Logs/` | Pipeline execution logs | Yes |
+
+---
+
+## 🔧 Business Logic Rules
+
+### Counter Definitions
+
+#### act_count (Activations)
+- **Formula**: `COUNT(ACT) WHERE channel_act != 'UPGRADE'`
+- **Excludes**: Upgrade activations
+- **Includes**: New subscriptions only
+
+#### act_free (Free Activations)
+- **Formula**: `COUNT(ACT) WHERE channel_act != 'UPGRADE' AND rev = 0`
+- **Purpose**: Track free trial activations
+
+#### act_pay (Paid Activations)
+- **Formula**: `COUNT(ACT) WHERE channel_act != 'UPGRADE' AND rev > 0`
+- **Purpose**: Track paid activations
+
+#### upg_count (Upgrade Activations)
+- **Formula**: `COUNT(ACT) WHERE channel_act = 'UPGRADE'`
+- **Purpose**: Track service upgrades
+
+#### reno_count (Renewals)
+- **Formula**: `COUNT(RENO)`
+- **Purpose**: Track subscription renewals
+
+#### dct_count (Deactivations)
+- **Formula**: `COUNT(DCT) WHERE channel_dct != 'UPGRADE'`
+- **Excludes**: Upgrade deactivations
+- **Purpose**: Track true deactivations
+
+#### upg_dct_count (Upgrade Deactivations)
+- **Formula**: `COUNT(DCT) WHERE channel_dct = 'UPGRADE'`
+- **Purpose**: Track deactivations due to upgrades
+
+#### cnr_count (Cancellations)
+- **Formula**: `COUNT(CNR)`
+- **Purpose**: Track user-initiated cancellations
+
+#### ppd_count (Prepaid)
+- **Formula**: `COUNT(PPD)`
+- **Purpose**: Track prepaid transactions
+
+#### rfnd_count (Refunds)
+- **Formula**: `SUM(rfnd_cnt)` **NOT** `COUNT(RFND)`
+- **CRITICAL**: Must sum the `rfnd_cnt` column, not count rows
+- **Why**: One row can represent multiple refunds
+
+#### rfnd_amount (Refund Amount)
+- **Formula**: `SUM(rfnd_amount)`
+- **Purpose**: Total refund amount in euros
+
+#### rev (Revenue)
+- **Formula**: `SUM(rev) FROM ACT, RENO, PPD`
+- **Purpose**: Total revenue from activations, renewals, and prepaid
+
+### Service Categories
+
+#### Category Mapping (in `Scripts/01_aggregate_user_base.py`)
+
+| Original Category | Mapped Category |
+|-------------------|-----------------|
+| education, images | Edu_Ima |
+| news, sports | News_Sport |
+| games, ugames | Games & Ugames |
+| kids | KIDS |
+| light | Light |
+| music | Music |
+| free time | Free Time |
+| beauty & health | Beauty & Health |
+
+#### Excluded Services
+
+**Never include in aggregations**:
+- nubico
+- challenge arena
+- movistar apple music
+
+**Where excluded**:
+- `Scripts/01_aggregate_user_base.py` (user base aggregation)
+- `Scripts/05_build_counters.py` (counter aggregation)
+
+### Critical Formulas
+
+#### Net Activations
 ```
-CVAS_BEYOND_DATA/
-├── Scripts/
-│   ├── 00_convert_historical.py    ← Converts CSVs to Parquet (run when source CSVs update)
-│   ├── 05_build_counters.py        ← Builds transaction counters (fixed rfnd_count logic)
-│   └── utils/
-│       └── counter_utils.py        ← Utility functions (fixed rfnd_cnt loading)
+net_activations = act_count - dct_count
 ```
 
-### Output Data
+#### Churn Rate
 ```
-CVAS_BEYOND_DATA/
-├── Parquet_Data/
-│   └── transactions/
-│       ├── rfnd/year_month=*/      ← Regenerated Jan 18, 2026
-│       ├── act/year_month=*/
-│       └── ... (other transaction types)
-└── Counters/
-    ├── Counters_Service.csv        ← Service-level counters (rebuilt Jan 18, 2026)
-    └── Counters_CPC.parquet        ← CPC-level counters
+churn_rate = dct_count / (user_base_start + act_count)
+```
+
+#### ARPU (Average Revenue Per User)
+```
+arpu = rev / user_base_avg
 ```
 
 ---
 
 ## 🚀 Quick Start Commands
 
-### Daily Pipeline Execution
+### Daily Pipeline Execution (Automated)
+
 ```bash
 # Automated via launchd (8:05 AM - 9:30 AM)
-./1.GET_NBS_BASE.sh          # 8:05 AM
-./2.FETCH_DAILY_DATA.sh      # 8:25 AM
-./3.PROCESS_DAILY_AND_BUILD_VIEW.sh  # 8:30 AM
-./4.BUILD_TRANSACTION_COUNTERS.sh    # 9:30 AM (independent)
+# No manual intervention required
 ```
 
 ### Manual Execution
+
 ```bash
-# Run full pipeline manually
+# Full pipeline
 cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
-./1.GET_NBS_BASE.sh && ./2.FETCH_DAILY_DATA.sh && ./3.PROCESS_DAILY_AND_BUILD_VIEW.sh && ./4.BUILD_TRANSACTION_COUNTERS.sh
+./1.GET_NBS_BASE.sh && \
+./2.FETCH_DAILY_DATA.sh && \
+./3.PROCESS_DAILY_AND_BUILD_VIEW.sh && \
+./4.BUILD_TRANSACTION_COUNTERS.sh
+
+# Individual stages
+./1.GET_NBS_BASE.sh
+./2.FETCH_DAILY_DATA.sh
+./3.PROCESS_DAILY_AND_BUILD_VIEW.sh
+./4.BUILD_TRANSACTION_COUNTERS.sh
+
+# Stage 4 options
+./4.BUILD_TRANSACTION_COUNTERS.sh                    # Daily mode
+./4.BUILD_TRANSACTION_COUNTERS.sh --force            # Force overwrite
+./4.BUILD_TRANSACTION_COUNTERS.sh --backfill         # Backfill all dates
+./4.BUILD_TRANSACTION_COUNTERS.sh 2025-01-15         # Specific date
+./4.BUILD_TRANSACTION_COUNTERS.sh --start-date 2025-01-01 --end-date 2025-01-31
 ```
 
-### Historical Data Regeneration
+### Maintenance Commands
+
 ```bash
-# When source CSVs update
-cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
+# Regenerate historical Parquet data
 /opt/anaconda3/bin/python Scripts/00_convert_historical.py
 
-# Rebuild counters with backfill
+# Rebuild all counters
 ./4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force
+
+# Generate MASTERCPC.csv
+/opt/anaconda3/bin/python 0.GET_MASTERCPC_CSV.py
 ```
 
-### Validation Queries
+### Validation Queries (Polars)
+
 ```python
-# Check refund counts for Beauty & Health (Dec 2025)
 import polars as pl
 
+# Check refund counts for Beauty & Health (Dec 2025)
 counters = pl.read_csv('Counters/Counters_Service.csv')
 beauty_health = counters.filter(
     (pl.col('tme_category').str.contains('(?i)beauty')) &
@@ -328,39 +540,50 @@ summary = beauty_health.select([
     pl.col('rfnd_count').sum(),  # Should be 7,001
     pl.col('rfnd_amount').sum()  # Should be €15,033.93
 ])
+print(summary)
+
+# Check CPC-level counters
+cpc_counters = pl.read_parquet('Counters/Counters_CPC.parquet')
+print(cpc_counters.filter(pl.col('date') == '2025-12-01'))
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## 🐛 Troubleshooting Guide
 
-### Issue: Counters don't match manual counts
+### Issue: Counters Don't Match Manual Counts
+
 **Symptoms**: `rfnd_count` or `rfnd_amount` differs from manual CSV aggregation
 
 **Checklist**:
 1. ✅ Is `rfnd_cnt` being summed (not row count)?
-2. ✅ Are parquet files up to date with source CSVs?
+2. ✅ Are Parquet files up to date with source CSVs?
 3. ✅ Has `Scripts/00_convert_historical.py` been run recently?
 4. ✅ Are deactivations excluding upgrades (`channel_dct != 'UPGRADE'`)?
+5. ✅ Are activations excluding upgrades (`channel_act != 'UPGRADE'`)?
 
 **Solution**:
 ```bash
-# Regenerate parquet files
-cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
+# Regenerate Parquet files
 /opt/anaconda3/bin/python Scripts/00_convert_historical.py
 
 # Rebuild counters
 ./4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force
 ```
 
-### Issue: Missing data in parquet files
+### Issue: Missing Data in Parquet Files
+
 **Symptoms**: Parquet row count < CSV row count
 
 **Root Cause**: Historical conversion script not run after CSV updates
 
-**Solution**: Re-run `Scripts/00_convert_historical.py`
+**Solution**:
+```bash
+/opt/anaconda3/bin/python Scripts/00_convert_historical.py
+```
 
-### Issue: Pipeline stage fails
+### Issue: Pipeline Stage Fails
+
 **Symptoms**: Stage 2, 3, or 4 exits with error
 
 **Checklist**:
@@ -368,6 +591,31 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 2. ✅ Check logs in `Logs/` directory
 3. ✅ Verify data files exist in expected locations
 4. ✅ Check Python path is `/opt/anaconda3/bin/python`
+5. ✅ Verify disk space and permissions
+
+**Common Errors**:
+- **"File not found"**: Previous stage didn't complete
+- **"Schema mismatch"**: CSV format changed, update schema in `Scripts/03_process_daily.py`
+- **"Permission denied"**: Check file permissions and ownership
+
+### Issue: SSH/SCP Connection Failures
+
+**Symptoms**: Stage 2 cannot connect to remote server
+
+**Checklist**:
+1. ✅ Verify SSH keys are configured
+2. ✅ Test manual connection: `ssh omadmin@10.26.82.53`
+3. ✅ Check network connectivity
+4. ✅ Verify remote server is accessible
+
+### Issue: MASTERCPC.csv Missing or Outdated
+
+**Symptoms**: Stage 4 fails with "MASTERCPC.csv not found" or counters have many unmapped CPCs
+
+**Solution**:
+```bash
+/opt/anaconda3/bin/python 0.GET_MASTERCPC_CSV.py
+```
 
 ---
 
@@ -389,52 +637,54 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 > ```
 > Then update "Last Updated" dates in both `CLAUDE.md` and `README.md`, and reply: **"✅ Documentation updated"**
 
-### Session: 2025-01-19 - Documentation Consolidation
+### Session: 2026-02-14 - Complete Documentation Rewrite
 **Changes Made**:
-- Consolidated CONTEXT.md, RULES.md, WARP.md into single `.ai-context.md`
-- Created new README.md with mandatory AI instructions
-- Deleted old documentation files (CONTEXT.md, RULES.md, WARP.md)
-- Implemented 2-file structure: README.md (orchestrator) + .ai-context.md (complete context)
+- Completely rewrote `README.md` with ETL flow diagram for human understanding
+- Completely rewrote `CLAUDE.md` with comprehensive AI agent context
+- Added missing `0.GET_MASTERCPC_CSV.py` script to documentation
+- Corrected directory structure (removed non-existent `.ai-context.md`)
+- Fixed `Counters_Service.csv` schema (18 columns, not 19 or 21)
+- Added visual ETL data flow diagram with all stages
+- Clarified that `Counters_Service.csv` is CPC-level with service metadata, not aggregated by service
+- Added comprehensive troubleshooting guide
+- Organized all critical rules, schemas, and business logic
 
 **Files Modified**:
-- Created `.ai-context.md` - Complete project context
-- Rewrote `README.md` - Mandatory AI instructions + GitHub overview
-- Deleted `CONTEXT.md`, `RULES.md`, `WARP.md`
+- `README.md` - Complete rewrite for human understanding with ETL flow diagram
+- `CLAUDE.md` - Complete rewrite for AI agents with full context
 
 **Validation**:
-- Final structure verified: 2 files only
-- All critical content preserved
-- AI orchestration protocol implemented
+- Verified all file paths exist
+- Verified all schemas match actual code
+- Verified all scripts are documented
 
-### Session: 2025-01-28 - AI Documentation Instructions Enhancement
+### Session: 2026-02-14 - Documentation Reconciliation & Schema Logic Verification
 **Changes Made**:
-- Rewrote AI assistant instructions in `README.md` to be more explicit and forceful
-- Added `⛔ STOP - DO NOT PROCEED` command at the top
-- Added numbered mandatory steps with table for reading all 3 documentation files
-- Added checklist of required understanding before proceeding
-- Added consequences warning for skipping documentation files
-- Added SESSION MANAGEMENT COMMANDS section with start/end session workflows
+- Conducted comprehensive audit of all scripts and folder structures
+- Verified `Counters_Service.csv` schema matches actual output (18 columns, CPC-level)
+- Confirmed `Scripts/00_convert_historical.py` role as setup/maintenance tool
+- Confirmed aggregation logic in `Scripts/01_aggregate_user_base.py` (Service/Category level, not CPC)
+- Updated `CLAUDE.md` schemas to reflect ground truth
 
 **Files Modified**:
-- `README.md` - Complete rewrite of AI instructions header, added session management commands
-- `CONTEXT.md` - Added file indicator, session notes template, session commands reference
-- `RULES.md` - Added file indicator with cross-reference to other docs
+- `CLAUDE.md` - Updated "Last Updated" and schemas
+- `README.md` - Updated "Last Updated"
 
 **Validation**:
-- Instructions tested and confirmed to be more explicit and actionable
-- Cross-references between all 3 files ensure models follow complete flow
+- Verified `Counters_Service.csv` header matches schema
+- Verified `MASTERCPC.csv` structure matches code expectations
 
 ### Session: 2026-01-18 - Refund Count Fix
 **Changes Made**:
 - `rfnd_count` was undercounting by ~90% for Beauty & Health
 - Parquet files were outdated (missing 436 rows for Dec 2025)
 - Changed `rfnd_count` logic to sum `rfnd_cnt` column
-- Regenerated all parquet files from source CSVs
+- Regenerated all Parquet files from source CSVs
 - Rebuilt all counters with `--backfill --force`
 
 **Files Modified**:
-- `Scripts/05_build_counters.py`
-- `Scripts/utils/counter_utils.py`
+- `Scripts/05_build_counters.py` - Changed aggregation logic in `compute_daily_cpc_counts()`
+- `Scripts/utils/counter_utils.py` - Ensured `rfnd_cnt` column is loaded
 
 **Validation**:
 - Beauty & Health Dec 2025: 7,001 refunds, €15,033.93 ✅
@@ -480,33 +730,32 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 **Validation**:
 - 2-file structure verified ✅
 
----
-
-### Session: 2026-02-14 - Documentation Reconciliation & Schema Logic Verification
+### Session: 2025-01-19 - Documentation Consolidation
 **Changes Made**:
-- Conducted comprehensive audit of all scripts and folder structures
-- Verified `Counters_Service.csv` schema matches actual output (18 columns, CPC-level)
-- Confirmed `Scripts/00_convert_historical.py` role as setup/maintenance tool
-- Confirmed aggregation logic in `Scripts/01_aggregate_user_base.py` (Service/Category level, not CPC)
-- Updated `CLAUDE.md` schemas to reflect ground truth
+- Consolidated CONTEXT.md, RULES.md, WARP.md into single `.ai-context.md`
+- Created new README.md with mandatory AI instructions
+- Deleted old documentation files (CONTEXT.md, RULES.md, WARP.md)
+- Implemented 2-file structure: README.md (orchestrator) + .ai-context.md (complete context)
 
 **Files Modified**:
-- `CLAUDE.md` - Updated "Last Updated" and schemas
-- `README.md` - Updated "Last Updated"
+- Created `.ai-context.md` - Complete project context
+- Rewrote `README.md` - Mandatory AI instructions + GitHub overview
+- Deleted `CONTEXT.md`, `RULES.md`, `WARP.md`
 
 **Validation**:
-- Verified `Counters_Service.csv` header matches schema
-- Verified `MASTERCPC.csv` structure matches code expectations
+- Final structure verified: 2 files only
+- All critical content preserved
+- AI orchestration protocol implemented
 
 ---
 
-## 🔧 Open Issues
+## 🔧 Open Issues & TODOs
 
 > **🤖 AI ASSISTANT**: Update this section when new issues are discovered or resolved.
 
 ### 1. Add User Base by CPC Output
-**Priority**: Medium
-**Status**: Pending
+**Priority**: Medium  
+**Status**: Pending  
 **Description**: Add `user_base_by_cpc.csv` output to Stage 1 (`1.GET_NBS_BASE.sh`)
 
 **Current State**:
@@ -517,103 +766,67 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 **Required Changes**:
 - Modify `Scripts/01_aggregate_user_base.py` to generate CPC-level aggregation
 - Add output to `User_Base/user_base_by_cpc.csv`
-- Update `1.GET_NBS_BASE.sh` to call the new aggregation
-
-**Requested By**: User on Jan 20, 2025
-**Reminder**: Show this TODO at start of next session
+- Format: `date|cpc|User_Base`
 
 ---
 
-## 📚 Key Concepts
+## 🧠 Key Concepts & Domain Knowledge
 
-### Transaction Types
-- **ACT**: Activations (new subscriptions)
-- **RENO**: Renewals (subscription renewals)
-- **DCT**: Deactivations (subscription cancellations)
-- **CNR**: Cancellations (user-initiated cancellations)
-- **RFND**: Refunds (refund transactions)
-- **PPD**: Prepaid (prepaid transactions)
+### Transaction Types Explained
 
-### Counter Definitions
-- **act_count**: Non-upgrade activations (excludes `channel_act='UPGRADE'`)
-- **act_free**: Free non-upgrade activations (`rev=0`, `channel_act != 'UPGRADE'`)
-- **act_pay**: Paid non-upgrade activations (`rev>0`, `channel_act != 'UPGRADE'`)
-- **upg_count**: Upgrade activations (`channel_act == 'UPGRADE'`)
-- **upg_dct_count**: Upgrade deactivations (`channel_dct == 'UPGRADE'`)
-- **dct_count**: Regular deactivations (excludes upgrades)
-
-### Service Categories
-```
-Beauty & Health → Beauty and Health (in MASTERCPC.csv)
-Education & Images → Education
-Free Time → Free Time
-Games & Ugames → Games
-KIDS → Kids
-Light → Light
-Music → Music
-News & Sport → News, Sport
-```
-
-### Critical Formulas
-- **Refund Count**: `rfnd_df['rfnd_cnt'].sum()` (NOT `len(rfnd_df)`)
-- **Deactivation Count**: Filter `channel_dct != 'UPGRADE'`
-- **Activation Count**: Filter `channel_act != 'UPGRADE'`
-
-### MASTERCPC.csv Format (Updated Jan 20, 2025)
-**Structure**: One row per CPC with columns:
-- `cpc`: CPC identifier (integer)
-- `service_name`: Service name (string)
-- `tme_category`: TME category (string)
-- `cpc_period`: Billing period in days (integer)
-  - `7` = Weekly
-  - `30` = Monthly
-  - `60` = Bimonthly
-  - `90` = Trimonthly
-  - `99999` = Pay Per Download (PPD)
-  - `0` = Other/Unknown
-- `cpc_price`: Price in euros (float)
-
-**Generation**: Run `0.GET_MASTERCPC_CSV.py` with source Excel file
-**Source**: Consolidated from `MASTER_CPC_MATRIX.xlsx` + updates
-
-### Counters_Service.csv Format (Updated Jan 20, 2025)
-**Structure**: One row per date/CPC combination with columns:
-```
-date, service_name, tme_category, cpc, cpc_period, cpc_price,
-act_count, act_free, act_pay, upg_count, reno_count, dct_count,
-upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
-```
-
-**Key Changes**:
-- No longer aggregates by service (one row per CPC)
-- Includes CPC-level billing details (period, price)
-- CSV output uses `quote_style='never'` (no quotes)
-
----
-
-## 🎯 Important Domain Knowledge
+| Type | Full Name | Description | Key Fields |
+|------|-----------|-------------|------------|
+| **ACT** | Activation | New subscription or upgrade | `channel_act`, `rev`, `trans_type_id` |
+| **RENO** | Renewal | Subscription renewal | `channel_act`, `rev` |
+| **DCT** | Deactivation | Subscription termination | `channel_dct` |
+| **CNR** | Cancellation | User-initiated cancellation | `mode` |
+| **RFND** | Refund | Refund issued to user | `rfnd_cnt`, `rfnd_amount`, `instant_rfnd` |
+| **PPD** | Prepaid | Pay-per-download transaction | `rev` |
 
 ### Edge Cases & Pitfalls
-1. **Missing activation records**: Some subscriptions start with RENO (no ACT record)
-2. **CPC upgrades**: Subscriptions can change services (tracked separately)
-3. **Subscription status hierarchy**: DCT > CNR > ACTIVE
-4. **RFND partitioning**: `__HIVE_DEFAULT_PARTITION__` for NULL dates
-5. **Launchd environment**: Minimal PATH, requires absolute Python path
-6. **Parquet compression**: Always use SNAPPY
 
-### Data Governance
-- **User base category mapping**: BUSINESS logic - no changes without approval
-- **NBS_BASE immutability**: 1123+ historical snapshots
-- **PII protection**: SECURITY - no logging `tmuserid` or `msisdn` in automated processes
-- **Git ignore enforcement**: NEVER commit data files
+#### 1. Missing Activation Records
+**Issue**: Some subscriptions have RENO records but no ACT record.
+
+**Handling**: `sql/build_subscription_view.sql` uses the first transaction (ACT or RENO) as the activation proxy. Sets `missing_act_record = true` flag.
+
+#### 2. Upgrade Transactions
+**Issue**: Upgrades create both ACT and DCT records with `channel_act='UPGRADE'` and `channel_dct='UPGRADE'`.
+
+**Handling**: 
+- Exclude from regular `act_count` and `dct_count`
+- Track separately in `upg_count` and `upg_dct_count`
+
+#### 3. Refund Aggregation
+**Issue**: `rfnd_atlas.csv` contains pre-aggregated data where one row can represent multiple refunds.
+
+**Handling**: Always sum `rfnd_cnt` column, never count rows.
+
+#### 4. PPD Identification
+**Issue**: PPD transactions need to be identifiable in counters.
+
+**Handling**: Set `cpc_period=99999` in `MASTERCPC.csv` for PPD CPCs.
+
+#### 5. Service Exclusions
+**Issue**: Some services should never appear in reports (test services, deprecated services).
+
+**Handling**: Exclude `nubico`, `challenge arena`, `movistar apple music` in aggregation scripts.
+
+### Data Governance Rules
+
+1. **PII Protection**: Never log `tmuserid` or `msisdn` in automated processes
+2. **Schema Immutability**: Never change Parquet schemas without updating all downstream processes
+3. **Partition Consistency**: Always use `year_month=YYYY-MM` format for Hive partitioning
+4. **Deduplication**: Always deduplicate before writing to Parquet
+5. **Idempotency**: Stage 4 can be re-run for the same date without data corruption
 
 ---
 
-## 📖 Validation & Metrics
+## 📈 Validation & Metrics
 
-### December 2025 Validation Results
+### December 2025 Counter Validation
 
-#### Beauty & Health Counters (Verified Jan 18, 2026)
+#### Beauty & Health Category
 | Metric | Value | Status |
 |--------|-------|--------|
 | Activations | 1,390 | ✅ |
@@ -634,6 +847,17 @@ upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
 | Light | 2,790 | €8,220.66 |
 | Music | 3,777 | €31,113.72 |
 | News & Sport | 1,752 | €3,282.92 |
+
+---
+
+## 🎓 End of Session Command
+
+When user says **"update docs"**:
+
+1. Add new session entry to **Session History** section
+2. Update **"Last Updated"** date in both `CLAUDE.md` and `README.md`
+3. Update **Open Issues & TODOs** if applicable
+4. Reply: **"✅ Documentation updated"**
 
 ---
 
