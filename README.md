@@ -1,6 +1,6 @@
 # CVAS Beyond Data
 
-> **Last Updated**: 2025-01-28
+> **Last Updated**: 2026-02-14
 >
 > **AI Agents**: Read `CLAUDE.md` for complete context and rules
 
@@ -152,7 +152,7 @@ pip install polars duckdb pandas python-dateutil
 ### Configuration
 1. Update PostgreSQL connection details in `Scripts/02_fetch_remote_nova_data.sh`
 2. Verify Python path in all scripts: `/opt/anaconda3/bin/python`
-3. Ensure `MASTERCPC.csv` is present in project root
+3. Ensure `MASTERCPC.csv` is present in project root (**Critical** - required for building service-level counters)
 
 ---
 

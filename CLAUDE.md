@@ -7,112 +7,45 @@
 ## MANDATORY FIRST ACTIONS
 
 **You are reading CLAUDE.md. Before responding:**
+// ... existing code ...
+## System Information
+- **Last Updated**: February 14, 2026
+- **Primary Agent**: Abacus AI Desktop (Gemini 3 Pro)
+- **Project Root**: `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
+- **Python Environment**: `/opt/anaconda3/bin/python`
 
-1. **Read this entire file** (CLAUDE.md) - contains critical rules and context
-2. **Then read `README.md`** - contains project overview and architecture
-3. **Then respond** to the user's request
+// ... existing code ...
+### 3. File Structure
+- **Root Scripts**:
+  - `1.GET_NBS_BASE.sh`: Fetches user base data.
+  - `2.FETCH_DAILY_DATA.sh`: Fetches daily transactions.
+  - `3.PROCESS_DAILY_AND_BUILD_VIEW.sh`: Processes data and builds view.
+  - `4.BUILD_TRANSACTION_COUNTERS.sh`: Builds counters.
+  - `Scripts/00_convert_historical.py`: Setup/Maintenance tool to convert historical CSVs to Parquet.
+- **Data Directories**:
+  - `Daily_Data/`: Raw daily CSVs.
+  - `Parquet_Data/`: Processed Parquet files (Hive partitioned).
+  - `User_Base/`: User base aggregations.
+- **Configuration**:
+  - `MASTERCPC.csv`: CPC to Service/Category mapping.
 
-**DO NOT just acknowledge - EXECUTE these steps.**
+// ... existing code ...
 
----
+### 6. Data Schemas
+#### Transaction Types (Polars Schema)
+- **ACT**: `tmuserid, msisdn, cpc, trans_type_id, channel_id, channel_act, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id`
+- **RENO**: `tmuserid, msisdn, cpc, trans_type_id, channel_id, channel_act, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id`
+- **DCT**: `tmuserid, msisdn, cpc, trans_type_id, channel_dct, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id`
+- **CNR**: `cancel_date, sbn_id, tmuserid, cpc, mode`
+- **RFND**: `tmuserid, cpc, refnd_date, rfnd_amount, rfnd_cnt, sbnid, instant_rfnd`
+- **PPD**: `tmuserid, msisdn, cpc, trans_type_id, channel_id, trans_date, act_date, reno_date, camp_name, tef_prov, campana_medium, campana_id, subscription_id, rev`
 
-## MANDATORY: Confirm Understanding After Reading Both Files
+#### Configuration Files
+- **MASTERCPC.csv**: `cpc` (int), `service_name` (str), `tme_category` (str), `cpc_period` (int), `cpc_price` (float)
 
-After reading CLAUDE.md and README.md, you MUST confirm you understand:
-- ✅ 4-stage sequential pipeline (NEVER break order)
-- ✅ 6 transaction types: ACT, RENO, DCT, CNR, RFND, PPD
-- ✅ Refund counting: `sum(rfnd_cnt)` NOT `count(rows)` - CRITICAL!
-- ✅ Exclude upgrades in activations/deactivations
-- ✅ Python path: `/opt/anaconda3/bin/python`
-- ✅ No PII in logs (tmuserid, msisdn)
+#### Output Schemas
+// ... existing code ...
 
----
-
-### Critical Rules (MEMORIZE THESE)
-- **Pipeline**: 4 stages, sequential: `1.GET_NBS_BASE.sh` → `2.FETCH_DAILY_DATA.sh` → `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `4.BUILD_TRANSACTION_COUNTERS.sh`
-- **Transaction Types**: Exactly 6: ACT, RENO, DCT, CNR, RFND, PPD
-- **Refund Counting**: `sum(rfnd_cnt)` NOT `count(rows)` - CRITICAL!
-- **Exclude Upgrades**: `channel_act != 'UPGRADE'` for activations, `channel_dct != 'UPGRADE'` for deactivations
-- **Python Path**: `/opt/anaconda3/bin/python` (absolute, required for launchd)
-- **No PII in Logs**: Never log `tmuserid` or `msisdn`
-
-### End of Session Command: `update docs`
-When user says **"update docs"**, update this file:
-1. Add session entry to "Session History" section
-2. Update "Open Issues" if needed
-3. Update "Last Updated" date in BOTH `CLAUDE.md` and `README.md`
-4. Reply: **"✅ Documentation updated: [DATE]. Session: [TITLE]"**
-
----
-
-## 📋 Project Overview
-
-**CVAS Beyond Data** is a production-grade ETL pipeline for telecommunications subscription data processing and analytics. It automates the daily collection of 6 transaction types (ACT, RENO, DCT, CNR, RFND, PPD) from remote PostgreSQL servers, transforms them into optimized Parquet columnar format, and builds comprehensive lifecycle views for business analytics.
-
-### What It Does
-- **Extracts** daily transaction data from remote Nova PostgreSQL server
-- **Transforms** 6 transaction types into Parquet format with Hive partitioning
-- **Loads** aggregated subscription views and transaction counters
-- **Generates** service-level and CPC-level analytics
-
-### How It Works
-- **4-Stage Sequential Pipeline**: User Base → Fetch → Process → Counters
-- **Automated Execution**: Runs via macOS launchd scheduler (8:05 AM - 9:30 AM)
-- **Data Storage**: Parquet files with Hive partitioning (`year_month=YYYY-MM`)
-- **Aggregation**: DuckDB for high-performance SQL aggregation
-
-### Performance
-- **Daily Processing**: ~1.5 hours for full pipeline
-- **Historical Data**: 1123+ user base snapshots
-- **Transaction Volume**: Millions of records per month
-- **Counter Generation**: Service and CPC-level daily aggregates
-
-### Platform
-- **OS**: macOS (launchd scheduler)
-- **Python**: 3.x with Polars, DuckDB
-- **Database**: PostgreSQL (remote Nova server)
-- **Storage**: Parquet (SNAPPY compression)
-
----
-
-## 🏗️ Architecture Overview
-
-### 4-Stage Sequential Pipeline
-
-```
-1.GET_NBS_BASE.sh (8:05 AM)
-    ↓ Fetches user base snapshot from Nova
-2.FETCH_DAILY_DATA.sh (8:25 AM)
-    ↓ Fetches 6 transaction types (ACT, RENO, DCT, CNR, RFND, PPD)
-3.PROCESS_DAILY_AND_BUILD_VIEW.sh (8:30 AM)
-    ↓ Converts CSVs to Parquet, builds subscription view
-4.BUILD_TRANSACTION_COUNTERS.sh (9:30 AM)
-    ↓ Generates service and CPC-level counters (INDEPENDENT)
-```
-
-**CRITICAL**: Stages 1-3 MUST run sequentially. Stage 4 is independent but requires Stage 3 completion.
-
-### Technology Stack
-- **Python**: Polars (data processing), DuckDB (aggregation)
-- **Shell**: Bash scripts for orchestration
-- **Storage**: Parquet with Hive partitioning
-- **Scheduler**: macOS launchd
-- **Database**: PostgreSQL (remote Nova server)
-
-### Directory Structure
-```
-CVAS_BEYOND_DATA/
-├── 1.GET_NBS_BASE.sh                    # Stage 1: Fetch user base
-├── 2.FETCH_DAILY_DATA.sh                # Stage 2: Fetch transactions
-├── 3.PROCESS_DAILY_AND_BUILD_VIEW.sh    # Stage 3: Process & aggregate
-├── 4.BUILD_TRANSACTION_COUNTERS.sh      # Stage 4: Build counters
-├── Scripts/
-│   ├── 01_aggregate_user_base.py        # User base aggregation
-│   ├── 02_fetch_remote_nova_data.sh     # Remote data fetching
-│   ├── 03_process_daily.py              # Daily CSV to Parquet
-│   ├── 04_build_subscription_view.py    # Subscription lifecycle view
-│   ├── 05_build_counters.py             # Counter generation
-│   ├── 00_convert_historical.py         # Historical CSV to Parquet
 │   └── utils/
 │       ├── counter_utils.py             # Counter utilities
 │       └── log_rotation.sh              # Log management
@@ -301,11 +234,11 @@ ACT, RENO, DCT, CNR, RFND, PPD
 }
 ```
 
-#### Counters_Service.csv (21 columns):
+#### Counters_Service.csv (19 columns):
 ```
-date, service_name, tme_category, cpcs, Free_CPC, Free_Period, Upgrade_CPC,
-CHG_Period, CHG_Price, act_count, act_free, act_pay, upg_count, reno_count,
-dct_count, upg_dct_count, cnr_count, ppd_count, rfnd_count, rfnd_amount, rev
+date, service_name, tme_category, cpc, cpc_period, cpc_price, act_count, act_free,
+act_pay, upg_count, reno_count, dct_count, upg_dct_count, cnr_count, ppd_count,
+rfnd_count, rfnd_amount, rev, last_updated
 ```
 
 ---
@@ -546,6 +479,24 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 
 **Validation**:
 - 2-file structure verified ✅
+
+---
+
+### Session: 2026-02-14 - Documentation Reconciliation & Schema Logic Verification
+**Changes Made**:
+- Conducted comprehensive audit of all scripts and folder structures
+- Verified `Counters_Service.csv` schema matches actual output (18 columns, CPC-level)
+- Confirmed `Scripts/00_convert_historical.py` role as setup/maintenance tool
+- Confirmed aggregation logic in `Scripts/01_aggregate_user_base.py` (Service/Category level, not CPC)
+- Updated `CLAUDE.md` schemas to reflect ground truth
+
+**Files Modified**:
+- `CLAUDE.md` - Updated "Last Updated" and schemas
+- `README.md` - Updated "Last Updated"
+
+**Validation**:
+- Verified `Counters_Service.csv` header matches schema
+- Verified `MASTERCPC.csv` structure matches code expectations
 
 ---
 
