@@ -1,12 +1,32 @@
-# CLAUDE.md - AI Agent Context & Instructions
+# 🚨 AI CONTEXT - READ THIS FILE FIRST
 
 > **Last Updated**: 2025-01-28
 
 ---
 
-## 🚨 MANDATORY FIRST ACTION
+## MANDATORY FIRST ACTIONS
 
-**DO NOT RESPOND TO ANY USER REQUEST UNTIL YOU READ THIS ENTIRE FILE.**
+**You are reading CLAUDE.md. Before responding:**
+
+1. **Read this entire file** (CLAUDE.md) - contains critical rules and context
+2. **Then read `README.md`** - contains project overview and architecture
+3. **Then respond** to the user's request
+
+**DO NOT just acknowledge - EXECUTE these steps.**
+
+---
+
+## MANDATORY: Confirm Understanding After Reading Both Files
+
+After reading CLAUDE.md and README.md, you MUST confirm you understand:
+- ✅ 4-stage sequential pipeline (NEVER break order)
+- ✅ 6 transaction types: ACT, RENO, DCT, CNR, RFND, PPD
+- ✅ Refund counting: `sum(rfnd_cnt)` NOT `count(rows)` - CRITICAL!
+- ✅ Exclude upgrades in activations/deactivations
+- ✅ Python path: `/opt/anaconda3/bin/python`
+- ✅ No PII in logs (tmuserid, msisdn)
+
+---
 
 ### Critical Rules (MEMORIZE THESE)
 - **Pipeline**: 4 stages, sequential: `1.GET_NBS_BASE.sh` → `2.FETCH_DAILY_DATA.sh` → `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `4.BUILD_TRANSACTION_COUNTERS.sh`

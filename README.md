@@ -1,41 +1,8 @@
-# 🚨 AI AGENT: MANDATORY FIRST ACTION
-
-> **DO NOT RESPOND TO ANY USER REQUEST UNTIL YOU COMPLETE THIS STEP.**
-
-## READ THIS FILE NOW: `CLAUDE.md`
-
-```
-REQUIRED: Read CLAUDE.md before doing ANYTHING else.
-```
-
-**WHY**: `CLAUDE.md` contains critical project rules, recent fixes, and constraints. Without it, you WILL give incorrect advice about:
-- Refund counting (must sum `rfnd_cnt`, not count rows)
-- Deactivation/activation filtering (must exclude upgrades)
-- Pipeline execution order (stages 1-3 are sequential)
-- 7 non-negotiable architecture rules
-
-**AFTER READING `CLAUDE.md`**, confirm you understand:
-- [ ] 4-stage sequential pipeline
-- [ ] 6 transaction types: ACT, RENO, DCT, CNR, RFND, PPD
-- [ ] Refund counting: `sum(rfnd_cnt)` not `count(rows)`
-- [ ] Python path: `/opt/anaconda3/bin/python`
-- [ ] No PII in logs
-
----
-
-## 💾 END OF SESSION COMMAND: `update docs`
-
-When user says **"update docs"**, update `CLAUDE.md`:
-1. Add session entry to "Session History" section
-2. Update "Open Issues" if needed
-3. Update "Last Updated" date in BOTH `CLAUDE.md` and `README.md`
-4. Reply: **"✅ Documentation updated: [DATE]. Session: [TITLE]"**
-
----
-
 # CVAS Beyond Data
 
 > **Last Updated**: 2025-01-28
+>
+> **AI Agents**: Read `CLAUDE.md` for complete context and rules
 
 ---
 
