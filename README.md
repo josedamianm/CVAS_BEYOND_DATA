@@ -1,95 +1,40 @@
-<!--
-═══════════════════════════════════════════════════════════════════════════
-    🚨🚨🚨 MANDATORY INSTRUCTIONS FOR AI ASSISTANTS 🚨🚨🚨
-═══════════════════════════════════════════════════════════════════════════
--->
+# 🚨 AI AGENT: MANDATORY FIRST ACTION
 
-## ⛔ STOP - DO NOT PROCEED UNTIL YOU COMPLETE THESE STEPS
+> **DO NOT RESPOND TO ANY USER REQUEST UNTIL YOU COMPLETE THIS STEP.**
 
-**You are an AI assistant. Before answering ANY question or performing ANY task, you MUST:**
+## READ THIS FILE NOW: `.ai-context.md`
 
-### 📖 Step 1: Read ALL Documentation Files (REQUIRED)
-Execute these reads IN ORDER. Do not skip any file:
+```
+REQUIRED: Read .ai-context.md before doing ANYTHING else.
+```
 
-| Order | File | Purpose | Action |
-|-------|------|---------|--------|
-| 1 | `README.md` | Project overview, orchestration protocol | You are reading this now ✓ |
-| 2 | **`.ai-context.md`** | Complete project context, rules, history | **READ THIS FILE NEXT** |
+**WHY**: `.ai-context.md` contains critical project rules, recent fixes, and constraints. Without it, you WILL give incorrect advice about:
+- Refund counting (must sum `rfnd_cnt`, not count rows)
+- Deactivation/activation filtering (must exclude upgrades)
+- Pipeline execution order (stages 1-3 are sequential)
+- 7 non-negotiable architecture rules
 
-### ✅ Step 2: Confirm Understanding
-After reading both files, you should understand:
-- [ ] This is a **telecom subscription ETL pipeline** with **4 stages**
-- [ ] Pipeline order: `1.GET_NBS_BASE.sh` → `2.FETCH_DAILY_DATA.sh` → `3.PROCESS_DAILY_AND_BUILD_VIEW.sh` → `4.BUILD_TRANSACTION_COUNTERS.sh`
-- [ ] Exactly **6 transaction types**: ACT, RENO, DCT, CNR, RFND, PPD
-- [ ] Tech stack: Python/Polars, DuckDB, Parquet (Hive partitioned), Shell scripts, launchd
-- [ ] Recent fixes: Refund counting (sum `rfnd_cnt`), upgrade separation, Parquet sync
-- [ ] Critical rules: Sequential execution, strict schemas, absolute Python path, no PII in logs
-- [ ] Refund counts: ALWAYS sum `rfnd_cnt`, NEVER count rows
-- [ ] Deactivations: Exclude upgrades (`channel_dct != 'UPGRADE'`)
-- [ ] Activations: Exclude upgrades (`channel_act != 'UPGRADE'`)
-- [ ] Counter system: Independent pipeline, runs after Stage 3
+**AFTER READING `.ai-context.md`**, confirm you understand:
+- [ ] 4-stage sequential pipeline
+- [ ] 6 transaction types: ACT, RENO, DCT, CNR, RFND, PPD
+- [ ] Refund counting: `sum(rfnd_cnt)` not `count(rows)`
+- [ ] Python path: `/opt/anaconda3/bin/python`
+- [ ] No PII in logs
 
-### ⚠️ FAILURE TO READ `.ai-context.md` = INCORRECT RESPONSES
-If you skip `.ai-context.md`, you will:
-- Miss critical recent fixes and changes
-- Violate architecture constraints (7 non-negotiable rules)
-- Give incorrect advice about refund counting
-- Break the sequential pipeline
-- Violate data governance and PII protection rules
+---
 
-### 💾 Step 3: End-of-Session Protocol (MANDATORY)
-When user says **"Update documentation before closing"** or session ends, you MUST:
-1. Update `.ai-context.md` → "Session History" section with today's changes
+## 💾 END OF SESSION: Update Documentation
+
+When user says **"Update documentation before closing"**:
+1. Update `.ai-context.md` → "Session History" section
 2. Update `.ai-context.md` → "Open Issues" section
-3. Update `.ai-context.md` → "Last Updated" date at top
-4. Update `README.md` → "Last Updated" date below (line after this section)
-5. Save both files
-
-**DO NOT skip this step. Documentation synchronization is critical for session continuity.**
+3. Update both files → "Last Updated" dates
 
 ---
 
 # CVAS Beyond Data
 
 > **Last Updated**: 2025-01-20
-
----
-
-## 🤖 AI AGENT ORCHESTRATION (DETAILED PROTOCOL)
-
-**This section is for AI agents only. Human users can skip to "Project Description" below.**
-
-### 📖 START OF SESSION CHECKLIST
-- [ ] Read `README.md` (this file) - mandatory AI instructions at top
-- [ ] Read `.ai-context.md` - complete project context
-- [ ] Check `.ai-context.md` → "Session History" for recent changes
-- [ ] Check `.ai-context.md` → "Open Issues" for pending work
-- [ ] Confirm understanding of:
-  - 4-stage sequential pipeline (NEVER break order)
-  - 6 transaction types (NEVER change count)
-  - Refund counting: sum `rfnd_cnt` column (NOT row count)
-  - Deactivation/Activation counting: exclude upgrades
-  - Absolute Python path: `/opt/anaconda3/bin/python`
-  - No PII in logs (SECURITY)
-- [ ] Ready to proceed with user's request
-
-### 💾 END OF SESSION CHECKLIST
-When user says **"Update documentation before closing"** or session ends:
-- [ ] Update `.ai-context.md` → "Session History" section:
-  - Add new entry with date (YYYY-MM-DD)
-  - Summarize changes made this session
-  - List files modified
-  - Note any new issues discovered
-- [ ] Update `.ai-context.md` → "Open Issues" section:
-  - Add new issues discovered
-  - Mark resolved issues as completed
-  - Update status of in-progress issues
-- [ ] Update `.ai-context.md` → "Last Updated" date (line 3)
-- [ ] Update `README.md` → "Last Updated" date (line 52)
-- [ ] Save both files
-- [ ] Confirm to user: "Documentation updated and synchronized"
-
-**CRITICAL**: Do NOT skip end-of-session updates. Session continuity depends on accurate history.
 
 ---
 
