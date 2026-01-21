@@ -23,18 +23,42 @@ REQUIRED: Read .ai-context.md before doing ANYTHING else.
 
 ---
 
-## 💾 END OF SESSION: Update Documentation
+## 💾 END OF SESSION COMMAND: `update docs`
 
-When user says **"Update documentation before closing"**:
-1. Update `.ai-context.md` → "Session History" section
-2. Update `.ai-context.md` → "Open Issues" section
-3. Update both files → "Last Updated" dates
+When user says **"update docs"** (or "sync docs", "save session"), execute this checklist:
+
+### Step 1: Update `.ai-context.md`
+Add new entry to **"Session History"** section (line ~400):
+```markdown
+### Session: [DATE] - [Brief Title]
+**Changes Made**:
+- [List each change made this session]
+
+**Files Modified**:
+- [List files with brief description]
+
+**Validation**:
+- [Any tests run or verifications done]
+```
+
+### Step 2: Update Open Issues in `.ai-context.md`
+- Add any NEW issues discovered → "Open Issues" section (line ~482)
+- Mark RESOLVED issues as completed
+- Update status of in-progress items
+
+### Step 3: Sync Dates
+Update **"Last Updated"** in BOTH files to today's date:
+- `.ai-context.md` line 3: `> **Last Updated**: YYYY-MM-DD`
+- `README.md` line 37: `> **Last Updated**: YYYY-MM-DD`
+
+### Step 4: Confirm
+Reply: **"✅ Documentation synced: [DATE]. Session: [TITLE]"**
 
 ---
 
 # CVAS Beyond Data
 
-> **Last Updated**: 2025-01-20
+> **Last Updated**: 2025-01-28
 
 ---
 
