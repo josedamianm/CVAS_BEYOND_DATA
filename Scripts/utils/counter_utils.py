@@ -22,21 +22,22 @@ def load_excluded_users(path: Path) -> tuple[set[str], set[str]]:
         return set(), set()
 
     try:
-        df = pl.read_csv(path)
+        df = pl.read_csv(path, schema_overrides={'msisdn': pl.Utf8, 'tmuserid': pl.Utf8})
 
         if 'msisdn' not in df.columns:
             df = pl.read_csv(path, has_header=False, new_columns=['msisdn'])
 
-        msisdns = df['msisdn'].cast(pl.Utf8).to_list()
+        msisdns = df['msisdn'].to_list()
         excluded_msisdns = set(m for m in msisdns if m is not None and m != '')
 
         excluded_tmuserids = set()
         if 'tmuserid' in df.columns:
-            tmuserids = df['tmuserid'].cast(pl.Utf8).to_list()
+            tmuserids = df['tmuserid'].to_list()
             excluded_tmuserids = set(t for t in tmuserids if t is not None and t != '')
 
         return excluded_msisdns, excluded_tmuserids
-    except Exception:
+    except Exception as e:
+        print(f"Warning: Error loading {path}: {e}")
         return set(), set()
 
 
