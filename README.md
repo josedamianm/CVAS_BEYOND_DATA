@@ -67,7 +67,7 @@
 │  1.GET_NBS_BASE.sh → Scripts/01_aggregate_user_base.py                      │
 │  ├─ Extracts: NBS_Base.csv from Nova PostgreSQL (via SCP)                   │
 │  ├─ Transforms: Aggregates by service, category, and CPC                    │
-│  │   • Excludes: nubico, challenge arena, movistar apple music              │
+│  │   • Excludes: nubico, challenge arena, movistar apple music, juegos onmo │
 │  │   • Maps: education/images → Edu_Ima, news/sports → News_Sport          │
 │  └─ Loads:                                                                   │
 │      • User_Base/YYYYMMDD_NBS_Base.csv (raw snapshot)                       │
@@ -151,7 +151,7 @@
 │  │     - rfnd_amount, rev                                                    │
 │  │   • Merges with historical counters (idempotent)                         │
 │  │   • Joins with MASTERCPC.csv for service metadata                        │
-│  │   • Filters out: nubico, movistar apple music                            │
+│  │   • Filters out: nubico, challenge arena, movistar apple music, juegos onmo │
 │  └─ Loads:                                                                   │
 │      • Counters/Counters_CPC.parquet (historical CPC-level counters)        │
 │      • Counters/Counters_Service.csv (CPC-level with service metadata)      │
