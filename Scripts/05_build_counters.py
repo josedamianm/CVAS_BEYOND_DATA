@@ -292,8 +292,11 @@ def aggregate_by_service(
 
     joined = joined.filter(
         ~pl.col('service_name').str.to_lowercase().str.contains('nubico') &
-        ~pl.col('service_name').str.to_lowercase().str.contains('movistar apple music')
+        ~pl.col('service_name').str.to_lowercase().str.contains('challenge arena') &
+        ~pl.col('service_name').str.to_lowercase().str.contains('movistar apple music') &
+        ~pl.col('service_name').str.to_lowercase().str.contains('juegos onmo')
     )
+
 
     result = joined.select([
         'date',
@@ -527,7 +530,7 @@ def aggregate_by_service(
 ) -> tuple[pl.DataFrame, list[int]]:
     """
     Aggregate CPC counters by Service Name.
-    Excludes services containing 'nubico' (case-insensitive).
+    Excludes services containing 'nubico', 'challenge arena', 'movistar apple music', 'juegos onmo' (case-insensitive).
 
     Returns:
         - Aggregated DataFrame
@@ -598,7 +601,9 @@ def aggregate_by_service(
 
     joined = joined.filter(
         ~pl.col('service_name').str.to_lowercase().str.contains('nubico') &
-        ~pl.col('service_name').str.to_lowercase().str.contains('movistar apple music')
+        ~pl.col('service_name').str.to_lowercase().str.contains('challenge arena') &
+        ~pl.col('service_name').str.to_lowercase().str.contains('movistar apple music') &
+        ~pl.col('service_name').str.to_lowercase().str.contains('juegos onmo')
     )
 
     aggregated = joined.group_by(['date', 'service_name', 'tme_category']).agg([

@@ -473,6 +473,7 @@ date|tme_category|User_Base
 - nubico
 - challenge arena
 - movistar apple music
+- juegos onmo
 
 **Where excluded**:
 - `Scripts/01_aggregate_user_base.py` (user base aggregation)
@@ -852,7 +853,7 @@ print(cpc_counters.filter(pl.col('date') == '2025-12-01'))
 #### 5. Service Exclusions
 **Issue**: Some services should never appear in reports (test services, deprecated services).
 
-**Handling**: Exclude `nubico`, `challenge arena`, `movistar apple music` in aggregation scripts.
+**Handling**: Exclude `nubico`, `challenge arena`, `movistar apple music`, `juegos onmo` in aggregation scripts.
 
 ### Data Governance Rules
 
