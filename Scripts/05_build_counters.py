@@ -39,12 +39,13 @@ from utils.counter_utils import (
     write_atomic_csv,
     discover_all_transaction_dates,
     get_missing_dates,
+    load_excluded_users,
 )
 
 TX_TYPES = ['act', 'reno', 'dct', 'cnr', 'ppd', 'rfnd']
 
 
-def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFrame:
+def compute_daily_cpc_counts(parquet_base: Path, target_date: str, excluded_msisdns: set[str] | None = None, excluded_tmuserids: set[str] | None = None) -> pl.DataFrame:
     """
     Compute transaction counts, revenue, and refund amounts by CPC for a single date.
     """
@@ -62,7 +63,7 @@ def compute_daily_cpc_counts(parquet_base: Path, target_date: str) -> pl.DataFra
     tx_upg_dct = {}
 
     for tx_type in TX_TYPES:
-        df = load_transactions_for_date(parquet_base, target_date, tx_type)
+        df = load_transactions_for_date(parquet_base, target_date, tx_type, excluded_msisdns, excluded_tmuserids)
         if df.is_empty():
             tx_counts[tx_type] = {}
             tx_revenue[tx_type] = {}
@@ -322,11 +323,13 @@ def aggregate_by_service(
 def process_date(
     target_date: str,
     project_root: Path,
-    force: bool = False
+    force: bool = False,
+    excluded_msisdns: set[str] | None = None,
+    excluded_tmuserids: set[str] | None = None
 ) -> dict:
     """
     Process counters for a single date.
-    
+
     Returns dict with processing stats.
     """
     parquet_base = project_root / 'Parquet_Data' / 'transactions'
@@ -334,26 +337,26 @@ def process_date(
     counters_cpc_path = counters_dir / 'Counters_CPC.parquet'
     counters_service_path = counters_dir / 'Counters_Service.csv'
     mastercpc_path = project_root / 'MASTERCPC.csv'
-    
+
     stats = {
         'date': target_date,
         'cpcs_processed': 0,
         'unmapped_cpcs': [],
         'tx_counts': {}
     }
-    
+
     print(f"  Loading historical counters...", end=' ')
     existing = load_counters_cpc(counters_cpc_path)
     print(f"✓ {len(existing):,} rows, {existing['date'].n_unique() if not existing.is_empty() else 0} dates")
-    
+
     date_val = datetime.strptime(target_date, '%Y-%m-%d').date()
     if not force and not existing.is_empty():
         if date_val in existing['date'].unique().to_list():
             print(f"  ⚠️  Date {target_date} already processed. Use --force to recompute.")
             return stats
-    
+
     print(f"  Computing daily counts for {target_date}...")
-    daily_counts = compute_daily_cpc_counts(parquet_base, target_date)
+    daily_counts = compute_daily_cpc_counts(parquet_base, target_date, excluded_msisdns, excluded_tmuserids)
     
     if daily_counts.is_empty():
         print(f"  ⚠️  No transactions found for {target_date}")
@@ -415,6 +418,12 @@ def main():
     project_root = Path(__file__).resolve().parent.parent
     parquet_base = project_root / 'Parquet_Data' / 'transactions'
     counters_cpc_path = project_root / 'Counters' / 'Counters_CPC.parquet'
+
+    excluded_msisdns_path = project_root / 'Users_No_Limits.csv'
+    excluded_msisdns, excluded_tmuserids = load_excluded_users(excluded_msisdns_path)
+
+    if excluded_msisdns:
+        print(f"Loaded {len(excluded_msisdns):,} MSISDNs and {len(excluded_tmuserids):,} TMUSERIDs to exclude from Users_No_Limits.csv")
 
     if args.start_date and args.end_date:
         start = datetime.strptime(args.start_date, '%Y-%m-%d')
@@ -488,7 +497,7 @@ def main():
         print("-" * 60)
 
         try:
-            stats = process_date(date, project_root, args.force)
+            stats = process_date(date, project_root, args.force, excluded_msisdns, excluded_tmuserids)
             total_cpcs += stats['cpcs_processed']
             all_unmapped.update(stats.get('unmapped_cpcs', []))
         except Exception as e:

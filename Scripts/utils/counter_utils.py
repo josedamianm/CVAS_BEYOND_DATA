@@ -6,28 +6,66 @@ import re
 import tempfile
 
 
+def load_excluded_users(path: Path) -> tuple[set[str], set[str]]:
+    """
+    Load MSISDNs and TMUSERIDs to exclude from counters.
+
+    Args:
+        path: Path to Users_No_Limits.csv
+              Format: CSV with columns 'msisdn' and optionally 'tmuserid'
+              Legacy format (no header, single column) is also supported
+
+    Returns:
+        Tuple of (excluded_msisdns, excluded_tmuserids)
+    """
+    if not path.exists():
+        return set(), set()
+
+    try:
+        df = pl.read_csv(path)
+
+        if 'msisdn' not in df.columns:
+            df = pl.read_csv(path, has_header=False, new_columns=['msisdn'])
+
+        msisdns = df['msisdn'].cast(pl.Utf8).to_list()
+        excluded_msisdns = set(m for m in msisdns if m is not None and m != '')
+
+        excluded_tmuserids = set()
+        if 'tmuserid' in df.columns:
+            tmuserids = df['tmuserid'].cast(pl.Utf8).to_list()
+            excluded_tmuserids = set(t for t in tmuserids if t is not None and t != '')
+
+        return excluded_msisdns, excluded_tmuserids
+    except Exception:
+        return set(), set()
+
+
 def load_transactions_for_date(
     parquet_base: Path,
     target_date: str,
-    tx_type: str
+    tx_type: str,
+    excluded_msisdns: set[str] | None = None,
+    excluded_tmuserids: set[str] | None = None
 ) -> pl.DataFrame:
     """
     Load transactions for a specific date and type.
-    
+
     Args:
         parquet_base: Base path to Parquet_Data/transactions
         target_date: Date string YYYY-MM-DD
         tx_type: Transaction type (act, reno, dct, cnr, ppd, rfnd)
-    
+        excluded_msisdns: Optional set of MSISDNs to exclude from results
+        excluded_tmuserids: Optional set of TMUSERIDs to exclude from results
+
     Returns:
         DataFrame with transactions for that date
     """
     year_month = target_date[:7]
     tx_path = parquet_base / tx_type / f"year_month={year_month}"
-    
+
     if not tx_path.exists():
         return pl.DataFrame()
-    
+
     date_col_map = {
         'act': 'trans_date',
         'reno': 'trans_date',
@@ -36,9 +74,9 @@ def load_transactions_for_date(
         'ppd': 'trans_date',
         'rfnd': 'refnd_date'
     }
-    
+
     date_col = date_col_map[tx_type]
-    
+
     try:
         df = pl.scan_parquet(str(tx_path / "*.parquet")).collect()
 
@@ -48,6 +86,12 @@ def load_transactions_for_date(
         df = df.filter(
             pl.col(date_col).dt.date().cast(pl.Utf8) == target_date
         )
+
+        if excluded_msisdns and 'msisdn' in df.columns:
+            df = df.filter(~pl.col('msisdn').cast(pl.Utf8).is_in(excluded_msisdns))
+
+        if excluded_tmuserids and 'tmuserid' in df.columns:
+            df = df.filter(~pl.col('tmuserid').cast(pl.Utf8).is_in(excluded_tmuserids))
 
         cols_to_select = ['cpc', date_col]
         if 'rev' in df.columns:

@@ -434,6 +434,24 @@ date|tme_category|User_Base
 - **Formula**: `SUM(rev) FROM ACT, RENO, PPD`
 - **Purpose**: Total revenue from activations, renewals, and prepaid
 
+### Transaction Filtering
+
+#### User Exclusion List (Users_No_Limits.csv)
+- **File**: `Users_No_Limits.csv` (project root)
+- **Format**: CSV with columns `msisdn` and `tmuserid`
+- **Purpose**: Exclude specific users (e.g., test accounts, internal users) from all counter calculations
+- **Setup**:
+  1. Create initial CSV with one MSISDN per line (no header)
+  2. Run `python Scripts/enrich_users_no_limits.py` to add `tmuserid` column
+  3. Script scans ACT/RENO/DCT/PPD transactions to find corresponding TMUSERIDs
+  4. Creates backup (`.csv.bak`) and writes enriched CSV with both columns
+- **Implementation**:
+  - `05_build_counters.py` loads both columns at startup
+  - Filters transactions in `load_transactions_for_date()`:
+    - **ACT, RENO, DCT, PPD**: Filter by `msisdn` column
+    - **CNR, RFND**: Filter by `tmuserid` column
+  - Filtering occurs before any aggregation to ensure excluded users don't affect any counters
+
 ### Service Categories
 
 #### Category Mapping (in `Scripts/01_aggregate_user_base.py`)
