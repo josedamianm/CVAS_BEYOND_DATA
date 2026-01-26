@@ -8,11 +8,14 @@ User_Base/NBS_BASE/*
 !User_Base/NBS_BASE/.gitkeep
 User_Base/user_base_by_category.csv
 User_Base/user_base_by_service.csv
+User_Base/user_base_by_cpc.csv
 
 # Counters
 Counters/*.parquet
 Counters/*.csv
 !Counters/.gitkeep
+Counters/Counters_CPC.parquet
+Counters/Counters_Service.csv
 
 # Logs
 Logs/*.log
@@ -62,5 +65,5 @@ env/
 *.tmp
 *.bak
 *.backup
-Counters/Counters_CPC.parquet
-Counters/Counters_Service.csv
+
+
