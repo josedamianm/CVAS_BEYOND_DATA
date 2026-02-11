@@ -1,6 +1,6 @@
 # CVAS Beyond Data - Telecommunications ETL Pipeline
 
-> **Last Updated**: 2026-02-15
+> **Last Updated**: 2026-02-11
 >
 > **AI Agents**: Read `CLAUDE.md` for complete context, rules, and session history
 
@@ -174,7 +174,43 @@
 │  • Before backfilling counters                                              │
 │                                                                               │
 └──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ MAINTENANCE: Gap Detection & Backfill (As-Needed)                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  5.BACKFILL_MISSING_DATES.sh → Scripts/05_backfill_missing_dates.py         │
+│  ├─ Purpose: Detect and repair date gaps in Parquet data                    │
+│  ├─ Detection Logic:                                                         │
+│  │   • Scans Parquet data for date range and existing dates                 │
+│  │   • Compares with CSV source data availability                           │
+│  │   • Identifies missing dates within the Parquet date range               │
+│  │   • Reports gaps as individual dates or date ranges                      │
+│  ├─ Backfill Process:                                                        │
+│  │   • Reads missing dates from Historical CSV files                        │
+│  │   • Merges with existing Parquet data                                    │
+│  │   • Deduplicates using same logic as daily processing                    │
+│  │   • Rewrites Parquet files with complete data                            │
+│  └─ Usage:                                                                   │
+│      • Dry-run mode: ./5.BACKFILL_MISSING_DATES.sh --dry-run                │
+│      • Execute backfill: ./5.BACKFILL_MISSING_DATES.sh                      │
+│      • Custom source: --source-path /path/to/historical/data                │
+│                                                                               │
+│  When to run:                                                                │
+│  • After discovering data discrepancies in counters                         │
+│  • When daily pipeline was interrupted for multiple days                    │
+│  • Before critical reporting periods to ensure data completeness            │
+│  • After system downtime or maintenance windows                             │
+│                                                                               │
+│  Common Scenarios:                                                           │
+│  • Pipeline setup mid-month (gap between historical load and daily start)   │
+│  • Server downtime causing missed daily processing                          │
+│  • Network issues preventing daily data fetch                               │
+│  • Manual intervention required during system migration                     │
+│                                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
+
 
 ---
 

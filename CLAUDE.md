@@ -1,6 +1,6 @@
 # 🚨 AI CONTEXT - READ THIS FILE FIRST
 
-> **Last Updated**: 2026-02-15
+> **Last Updated**: 2026-02-11
 > **Project**: CVAS Beyond Data - Telecommunications ETL Pipeline
 > **Purpose**: Complete AI agent context, rules, schemas, and session history
 
@@ -37,7 +37,7 @@
 
 ## 🖥️ System Information
 
-- **Last Updated**: 2026-02-15
+- **Last Updated**: 2026-02-11
 - **Primary Agent**: Abacus AI Desktop (Claude Sonnet 4.5)
 - **Project Root**: `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
 - **Python Environment**: `/opt/anaconda3/bin/python` (absolute path required for launchd)
@@ -655,6 +655,38 @@ print(cpc_counters.filter(pl.col('date') == '2025-12-01'))
 > - [Tests run or verifications]
 > ```
 > Then update "Last Updated" dates in both `CLAUDE.md` and `README.md`, and reply: **"✅ Documentation updated"**
+
+### Session: 2026-02-11 - Refund Data Gap Resolution & Backfill System Implementation
+**Changes Made**:
+- Diagnosed January 2026 refund discrepancy (only 53.6% of refunds appearing in counters)
+- Root cause: Parquet data missing Jan 18-31, 2026 (pipeline started Jan 27, historical load only had data through Jan 17)
+- Ran `Scripts/00_convert_historical.py` to regenerate complete Parquet data from source CSVs
+- Rebuilt transaction counters with `./4.BUILD_TRANSACTION_COUNTERS.sh --start-date 2026-01-01 --end-date 2026-01-31 --force`
+- Implemented automated gap detection and backfill system to prevent future issues
+- Created comprehensive backfill capability with dry-run mode for safe gap detection
+
+**Files Created**:
+- `Scripts/05_backfill_missing_dates.py` (443 lines) - Intelligent gap detection and backfill script
+- `5.BACKFILL_MISSING_DATES.sh` (54 lines) - Shell wrapper with logging and dry-run support
+
+**Files Modified**:
+- `README.md` - Added "MAINTENANCE: Gap Detection & Backfill" section with usage examples
+- `CLAUDE.md` - Added this session entry
+
+**Files Deleted**:
+- `REFUND_DISCREPANCY_REPORT.md` - Issue resolved, report no longer needed
+
+**Validation**:
+- January 2026: All 31 days present, 54,595 refunds, $151,529.94 ✅
+- February 2026: All 10 days present (through Feb 10), 19,253 refunds, $55,675.49 ✅
+- Backfill script successfully detects gaps in dry-run mode ✅
+- Parquet data now complete and matches source CSV files ✅
+
+**Key Learnings**:
+- Daily pipeline (`3.PROCESS_DAILY_AND_BUILD_VIEW.sh`) processes ONE date at a time, does NOT backfill gaps
+- Historical conversion script (`Scripts/00_convert_historical.py`) is the correct tool for reprocessing complete datasets
+- Gap scenario: Pipeline setup mid-month creates gap between historical load date and daily pipeline start date
+- New backfill script provides automated detection and repair for future gap scenarios
 
 ### Session: 2026-02-15 - MASTERCPC Service Name Corrections
 **Changes Made**:
