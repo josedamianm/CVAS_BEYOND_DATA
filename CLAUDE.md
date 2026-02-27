@@ -353,6 +353,7 @@ date|tme_category|User_Base
 | `Scripts/03_process_daily.py` | Stage 3 | Convert daily CSVs to Parquet |
 | `Scripts/04_build_subscription_view.py` | Stage 3 | Build subscription lifecycle view |
 | `Scripts/05_build_counters.py` | Stage 4 | Generate transaction counters |
+| `Scripts/revenue_report.py` | Manual | Monthly revenue report by service |
 
 ### Utility Scripts
 
@@ -656,6 +657,29 @@ print(cpc_counters.filter(pl.col('date') == '2025-12-01'))
 > - [Tests run or verifications]
 > ```
 > Then update "Last Updated" dates in both `CLAUDE.md` and `README.md`, and reply: **"✅ Documentation updated"**
+
+### Session: 2026-02-27 - Revenue Report Script
+
+**Changes Made**:
+- Created `Scripts/revenue_report.py` for generating monthly revenue reports by service from `Counters/Counters_Service.csv`
+- Script accepts service names (`-s`) and months (`-m`) as CLI arguments, with optional custom CSV path (`-f`)
+- Reads counter data, aggregates revenue by service and month, displays formatted table with monthly totals
+
+**Files Created**:
+- `Scripts/revenue_report.py` - CLI tool for ad-hoc monthly revenue reports by service
+
+**Files Modified**:
+- `README.md` - Added `revenue_report.py` to directory structure and usage sections
+- `CLAUDE.md` - Added `revenue_report.py` to Processing Scripts table and this session entry
+
+**Script Usage**:
+```bash
+python3 Scripts/revenue_report.py -s "IntimaX" "Slow Life" -m 2025-09 2025-10 2025-11 2025-12 2026-01
+python3 Scripts/revenue_report.py -s "Pink Crush" "Decrash" -m 2025-10 2025-11 -f /path/to/Counters_Service.csv
+```
+
+**Validation**:
+- Script tested with 5 services across 5 months, output matches manual analysis ✅
 
 ### Session: 2026-02-27 - RFND Analysis Script & Aggregated Data Validation
 

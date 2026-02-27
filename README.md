@@ -285,6 +285,7 @@ CVAS_BEYOND_DATA/
 │   ├── 03_process_daily.py              # Stage 3A: Daily CSV→Parquet
 │   ├── 04_build_subscription_view.py    # Stage 3B: Subscription lifecycle
 │   ├── 05_build_counters.py             # Stage 4: Counter generation
+│   ├── revenue_report.py               # Ad-hoc: Monthly revenue report by service
 │   ├── rfnd_analysis.py                 # Ad-hoc: RFND analysis by CPC per month
 │   └── utils/
 │       ├── counter_utils.py             # Counter helper functions
@@ -476,6 +477,15 @@ cd /Users/josemanco/CVAS/CVAS_BEYOND_DATA
 ```bash
 # When master CPC Excel files are updated
 /opt/anaconda3/bin/python 0.GET_MASTERCPC_CSV.py
+```
+
+#### Generate Monthly Revenue Report by Service
+```bash
+# Revenue report for specific services and months
+python3 Scripts/revenue_report.py -s "IntimaX" "Slow Life" -m 2025-09 2025-10 2025-11 2025-12 2026-01
+
+# Custom CSV path
+python3 Scripts/revenue_report.py -s "Pink Crush" "Decrash" -m 2025-10 2025-11 -f /path/to/Counters_Service.csv
 ```
 
 ---
