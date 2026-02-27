@@ -1,6 +1,6 @@
 # 🚨 AI CONTEXT - READ THIS FILE FIRST
 
-> **Last Updated**: 2026-02-11
+> **Last Updated**: 2026-02-27
 > **Project**: CVAS Beyond Data - Telecommunications ETL Pipeline
 > **Purpose**: Complete AI agent context, rules, schemas, and session history
 
@@ -37,8 +37,8 @@
 
 ## 🖥️ System Information
 
-- **Last Updated**: 2026-02-11
-- **Primary Agent**: Abacus AI Desktop (Claude Sonnet 4.5)
+- **Last Updated**: 2026-02-27
+- **Primary Agent**: Abacus AI Desktop (Claude Sonnet 4.6)
 - **Project Root**: `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
 - **Python Environment**: `/opt/anaconda3/bin/python` (absolute path required for launchd)
 - **Remote Server**: `omadmin@10.26.82.53` (Nova PostgreSQL)
@@ -285,6 +285,7 @@ cpc,service_name,tme_category,cpc_period,cpc_price
 **Special Rules**:
 - PPD transactions: `cpc_period = 99999` (set by `0.GET_MASTERCPC_CSV.py`)
 - No quotes in CSV output (`quote_style='never'`)
+- RFND analysis: Available via `Scripts/rfnd_analysis.py` for ad-hoc monthly CPC breakdowns
 
 ### Output Schemas
 
@@ -655,6 +656,45 @@ print(cpc_counters.filter(pl.col('date') == '2025-12-01'))
 > - [Tests run or verifications]
 > ```
 > Then update "Last Updated" dates in both `CLAUDE.md` and `README.md`, and reply: **"✅ Documentation updated"**
+
+### Session: 2026-02-27 - RFND Analysis Script & Aggregated Data Validation
+
+**Changes Made**:
+- Created `Scripts/rfnd_analysis.py` for ad-hoc RFND analysis aggregated by CPC per month
+- Fixed Hive partition column issue: added `hive_partitioning=True` to `pl.scan_parquet()` calls so `year_month` column is materialized
+- Validated whether the same RFND report could be extracted from `Parquet_Data/aggregated/subscriptions.parquet`
+- Confirmed aggregated file cannot replicate the report: only has lifetime totals (no month dimension), no `instant_rfnd` flag, and uses `current_cpc` (not CPC at refund time)
+- Generated `rfnd_analysis_2025Q4_2026-01.csv` with 319 rows (one per CPC per month) across 39,401 RFND records
+
+**Files Created**:
+- `Scripts/rfnd_analysis.py` - Reusable RFND analysis script: aggregates by `year_month` + `cpc`, computes 5 metrics, joins MASTERCPC metadata, outputs sorted CSV
+- `rfnd_analysis_2025Q4_2026-01.csv` - Output: 319 CPC/month combinations for 2025-10 through 2026-01
+
+**Key Findings - RFND Data**:
+- RFND schema has 8 columns (7 base + `year_month` Hive partition)
+- `instant_rfnd` has exactly 2 values: `'t'` (automatic/instant) and `'f'` (regular)
+- `__HIVE_DEFAULT_PARTITION__` anomaly: 5,544 rows where `refnd_date` is null (excluded from month-filtered queries)
+- Aggregated `subscriptions.parquet` is subscription-lifetime scoped — cannot produce per-month or instant_rfnd breakdowns
+
+**Script Usage**:
+```bash
+# Default: 2025-10 through 2026-01
+/opt/anaconda3/bin/python Scripts/rfnd_analysis.py --output rfnd_analysis.csv
+
+# Custom months
+/opt/anaconda3/bin/python Scripts/rfnd_analysis.py --months 2025-11 2025-12 --output rfnd_q4.csv
+```
+
+**Output Metrics per CPC per Month**:
+- `cpcTotalRfdsAmount` — sum of `rfnd_amount`
+- `cpcTotalRfdsCount` — sum of `rfnd_cnt`
+- `cpcTotalRfdsCountUU` — unique users refunded
+- `RegularRfdsUU` — unique users with `instant_rfnd='f'`
+- `AutomaticRfdsUU` — unique users with `instant_rfnd='t'`
+
+**Validation**:
+- Script runs successfully: 39,401 rows loaded, 319 CPC/month rows output ✅
+- `hive_partitioning=True` fix confirmed resolves `ColumnNotFoundError` for `year_month` ✅
 
 ### Session: 2026-02-11 - Refund Data Gap Resolution & Backfill System Implementation
 **Changes Made**:

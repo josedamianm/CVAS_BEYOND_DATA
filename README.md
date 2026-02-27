@@ -1,6 +1,6 @@
 # CVAS Beyond Data - Telecommunications ETL Pipeline
 
-> **Last Updated**: 2026-02-11
+> **Last Updated**: 2026-02-27
 >
 > **AI Agents**: Read `CLAUDE.md` for complete context, rules, and session history
 
@@ -285,6 +285,7 @@ CVAS_BEYOND_DATA/
 │   ├── 03_process_daily.py              # Stage 3A: Daily CSV→Parquet
 │   ├── 04_build_subscription_view.py    # Stage 3B: Subscription lifecycle
 │   ├── 05_build_counters.py             # Stage 4: Counter generation
+│   ├── rfnd_analysis.py                 # Ad-hoc: RFND analysis by CPC per month
 │   └── utils/
 │       ├── counter_utils.py             # Counter helper functions
 │       └── log_rotation.sh              # Log management (15-day retention)
