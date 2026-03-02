@@ -1,6 +1,6 @@
 # 🚨 AI CONTEXT - READ THIS FILE FIRST
 
-> **Last Updated**: 2026-02-27
+> **Last Updated**: 2026-03-02
 > **Project**: CVAS Beyond Data - Telecommunications ETL Pipeline
 > **Purpose**: Complete AI agent context, rules, schemas, and session history
 
@@ -37,7 +37,7 @@
 
 ## 🖥️ System Information
 
-- **Last Updated**: 2026-02-27
+- **Last Updated**: 2026-03-02
 - **Primary Agent**: Abacus AI Desktop (Claude Sonnet 4.6)
 - **Project Root**: `/Users/josemanco/CVAS/CVAS_BEYOND_DATA`
 - **Python Environment**: `/opt/anaconda3/bin/python` (absolute path required for launchd)
@@ -657,6 +657,37 @@ print(cpc_counters.filter(pl.col('date') == '2025-12-01'))
 > - [Tests run or verifications]
 > ```
 > Then update "Last Updated" dates in both `CLAUDE.md` and `README.md`, and reply: **"✅ Documentation updated"**
+
+### Session: 2026-03-02 - RFND Date Parsing Fix & February 2026 Data Recovery
+
+**Changes Made**:
+- Diagnosed RFND data gap: `year_month=2026-02` partition only had Feb 1–10 (18 days missing)
+- Root cause: daily `rfnd_atlas_day.csv` exports dates as `%Y-%m-%d` (no time), but `03_process_daily.py` only tried `%Y-%m-%d %H:%M:%S` with `strict=False`, silently nulling all RFND dates from Feb 11 onwards → routed to `__HIVE_DEFAULT_PARTITION__`
+- All other transaction types unaffected (ACT, RENO, DCT, CNR export full timestamps)
+- Fixed dual-format date parsing in `Scripts/03_process_daily.py`: tries `%Y-%m-%d %H:%M:%S` first, falls back to `%Y-%m-%d`; warns if nulls remain
+- Fixed same bug in `Scripts/05_backfill_missing_dates.py` (backfill execution section)
+- Added trailing gap detection to `Scripts/05_backfill_missing_dates.py`: uses `max(parquet_max, csv_max)` as upper bound, enabling detection of gaps beyond the parquet date range
+- Recovered Feb 11–28 RFND data from Dropbox historical backup using `./5.BACKFILL_MISSING_DATES.sh --source-path /Users/josemanco/Dropbox/BEYOND_DATA_OLD_backup/Historical_Data/`
+- Also backfilled 3 other historical RFND gaps: 2025-04-28, 2025-05-02, 2025-06-15 (confirmed zero-transaction days — no data in CSV)
+- Rebuilt all counters with `./4.BUILD_TRANSACTION_COUNTERS.sh --backfill --force`
+
+**Files Modified**:
+- `Scripts/03_process_daily.py` — dual date format parsing with null warning
+- `Scripts/05_backfill_missing_dates.py` — dual date format parsing + trailing gap detection
+
+**Validation - February 2026 RFND**:
+| Metric | Before | After |
+|--------|--------|-------|
+| Days covered | 10/28 | 28/28 ✅ |
+| rfnd_cnt (raw Parquet) | 19,253 | 53,189 ✅ |
+| rfnd_amount (raw Parquet) | €55,675 | €151,517 ✅ |
+| rfnd_count (Counters) | — | 52,681 ✅ |
+| rfnd_amount (Counters) | — | €147,140 ✅ |
+
+- Feb 2026 now consistent with Nov 2025 (53,639), Dec 2025 (45,787), Jan 2026 (54,595) ✅
+- Counter vs Parquet delta (~1%) expected due to excluded users and services ✅
+
+**Historical backup path**: `/Users/josemanco/Dropbox/BEYOND_DATA_OLD_backup/Historical_Data/`
 
 ### Session: 2026-02-27 - Revenue Report Script
 

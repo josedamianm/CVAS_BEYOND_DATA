@@ -254,7 +254,11 @@ def backfill_missing_dates(historical_path: str = None, dry_run: bool = False):
         print(f"  ✓ CSV date range: {csv_min} to {csv_max}")
 
         print(f"\n3. Detecting gaps...")
-        missing_dates = find_missing_dates(parquet_min, parquet_max, existing_dates)
+        # Use csv_max as upper bound when it extends beyond parquet data (trailing gap)
+        effective_end = max(parquet_max, csv_max) if csv_max and csv_max > parquet_max else parquet_max
+        if effective_end > parquet_max:
+            print(f"  ℹ️  CSV extends beyond Parquet max ({parquet_max} → {effective_end}), checking trailing gap too")
+        missing_dates = find_missing_dates(parquet_min, effective_end, existing_dates)
 
         if not missing_dates:
             print(f"  ✓ No gaps detected - all dates present")
@@ -325,6 +329,12 @@ def backfill_missing_dates(historical_path: str = None, dry_run: bool = False):
                     pl.Datetime,
                     format='%Y-%m-%d %H:%M:%S',
                     strict=False
+                ).fill_null(
+                    pl.col(date_col).str.strptime(
+                        pl.Datetime,
+                        format='%Y-%m-%d',
+                        strict=False
+                    )
                 ).alias(date_col)
             ])
         

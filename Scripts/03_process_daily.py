@@ -160,7 +160,7 @@ def process_daily_data(date_str: str):
                 print(f"  ⚠️  Empty file, skipping")
                 continue
             
-            # Parse date columns
+            # Parse date columns (handle both '%Y-%m-%d %H:%M:%S' and '%Y-%m-%d' formats)
             date_cols = [col for col in df_daily.columns if 'date' in col.lower()]
             for date_col in date_cols:
                 df_daily = df_daily.with_columns([
@@ -168,8 +168,18 @@ def process_daily_data(date_str: str):
                         pl.Datetime,
                         format='%Y-%m-%d %H:%M:%S',
                         strict=False
+                    ).fill_null(
+                        pl.col(date_col).str.strptime(
+                            pl.Datetime,
+                            format='%Y-%m-%d',
+                            strict=False
+                        )
                     ).alias(date_col)
                 ])
+                # Warn if any dates still null after both formats
+                null_count = df_daily[date_col].null_count()
+                if null_count > 0:
+                    print(f"  ⚠️  WARNING: {null_count} null values in '{date_col}' after parsing (will go to __HIVE_DEFAULT_PARTITION__)")
             
             # Add partition column
             if 'trans_date' in df_daily.columns:
